@@ -74,13 +74,43 @@ Juega partidas bot contra bot y muestra el porcentaje de victorias por arma, el 
 ## Estado
 
 - **v0.1** (noviembre 2026): juego local completo con pixel art, animaciones y sonido.
-- **v0.2** (en curso): juego online con link, publicación en GitHub Pages y Compendio de cartas.
+- **v0.2**: **el juego ya funciona online.** Podemos jugar juntos solo con un link, como en Duel Links: uno crea la sala, le manda el link al otro y listo. También tiene el Compendio de cartas y se publica solo en GitHub Pages.
+- Hasta ahora se usaron unos **50 USD de API** (Claude) para desarrollarlo.
+
+## Lo que aprendimos en las primeras partidas
+
+- **Falta balance y variedad.** El juego se siente monótono y lento: hay que trabajar el balance y sumar dinámicas nuevas.
+- **Vale la pena una versión solo para 2 personas.** Con 2 jugadores todos son cercanos y varias cartas pierden sentido; un modo pensado para 2 podría ser el más jugado entre nosotros.
+- **Tirar el dado estando armado casi nunca tiene sentido.** Pierdes tu carta del turno y eso es demasiado tiempo perdido. Hay que cambiar el costo (por ejemplo, que solo pierdas la carta si sacas el arma que ya tenías).
+- **El Arco es malísimo.** Con 2 o 3 jugadores no hay lejanos, así que casi siempre pega 1.
+
+## Cartas nuevas propuestas
+
+| Carta | Tipo | Efecto | Para qué |
+|---|---|---|---|
+| Ácido | Misterio | Quita 2 PA de la armadura de un jugador. | Romper armaduras sin depender del Garrote. |
+| Último aliento | Misterio | Solo si tienes 3 PV o menos: curas 3 PV y robas 1 carta. | Dar opciones de remontar. |
+| Herrero | Bendición | Tu arma actual hace +1 de daño mientras la tengas. | Que valga la pena cuidar y mejorar un arma. |
+| Parada | Defensa | Bloquea un ataque lejano y robas 1 carta. | Una defensa que además premia. |
+
+## Modo de prueba (estadísticas)
+
+El juego trae un modo de prueba donde los bots juegan muchas partidas entre ellos, y de ahí salen las estadísticas del Compendio (% de victorias de cada carta y arma):
+
+```bash
+npm run stats                    # 1500 partidas (lo que usa el Compendio hoy, ~1 minuto)
+npm run stats -- --games 100     # prueba rápida de 100 partidas
+```
+
+Con 100 partidas los números se mueven bastante entre corridas; para decidir cambios de balance, mejor usar 1000 o más.
 
 ## Hoja de ruta
 
 1. ✅ **Jugar online.** Sala con link; cada uno desde su computadora.
 2. ✅ **Galería de cartas.** Compendio con el % de victorias estimado de cada carta.
-3. ⏳ **Crear cartas fácil.** Un editor dentro del juego para inventar una carta (nombre, tipo, texto, copias y arte) y probarla en una partida sin tocar código.
+3. ⏳ **Balance y variedad.** Ajustar las cartas más fuertes y más débiles, arreglar el dado estando armado y el Arco, y sumar las cartas nuevas propuestas.
+4. ⏳ **Versión para 2 jugadores.** Reglas pensadas para 2 (por ejemplo, poder acercarse o alejarse como acción).
+5. ⏳ **Crear cartas fácil.** Un editor dentro del juego para inventar una carta (nombre, tipo, texto, copias y arte) y probarla en una partida sin tocar código.
 
 ## Colaborar (Mario)
 
