@@ -20,6 +20,7 @@ npm run dev        # juego en http://localhost:5173
 npm test           # tests del motor (obligatorio que pasen antes de entregar)
 npm run typecheck  # errores de TypeScript
 npm run sim        # 300 partidas bot vs bot con estadísticas de balance
+npm run stats      # recalcula el % de victorias de cada carta (src/data/card-stats.json)
 npm run sim -- --games 1000 --players 2-6
 npm run build      # versión estática en dist/
 ```
@@ -36,7 +37,10 @@ src/engine/        Motor de reglas. TypeScript puro, sin React ni DOM.
   dev.ts           Trampas del modo dev (dar carta, fijar PV, dar arma).
   rng.ts           Aleatorio con semilla (partidas reproducibles).
 src/bots/bot.ts    Bot genérico: simula cada jugada posible y elige la mejor.
-src/sim/           Simulador de balance (npm run sim).
+src/sim/           Simulador de balance (npm run sim) y estadísticas del Compendio (npm run stats).
+src/data/          card-stats.json: % de victorias por carta, generado por npm run stats.
+src/net/room.ts    Juego online: salas con link, anfitrión e invitados (PeerJS).
+src/engine/redact.ts  Vista para invitados: manos ajenas y mazo boca abajo.
 src/ui/            Interfaz React. Solo muestra el estado y manda acciones.
   pixel/sprites.ts Todo el arte pixel, escrito como texto (1 carácter = 1 píxel).
   pixel/Sprite.tsx Convierte un sprite de texto en imagen.
@@ -45,6 +49,9 @@ src/ui/            Interfaz React. Solo muestra el estado y manda acciones.
   fx/FxLayer.tsx   Efectos: proyectiles, números de daño, chispas, carteles, dado.
   audio/audio.ts   Efectos de sonido y música, todo sintetizado (sin archivos).
   settings.ts      Preferencias guardadas: Cinemático/Rápido, música, efectos.
+  useMatch.ts      Controlador de partida: local, anfitrión online o invitado online.
+  Lobby.tsx        Pantallas de sala online (crear, unirse, esperar).
+  Compendium.tsx   Compendio de cartas con su % de victorias.
 tests/             Tests del motor (vitest).
 PRODUCT.md         Para qué es el juego y para quién (no visual).
 DESIGN.md          Sistema visual: colores, tipografías, componentes, reglas.
@@ -98,6 +105,17 @@ Edita `src/engine/weapons.ts` (daño `near`/`far` y rasgos) y la tabla de la sec
 - **Sonido**: recetas de efectos en `SFX` y canciones en `SONGS` (`audio/audio.ts`). Hay 3 canciones (giga, marcha, vals) que rotan: cada una suena 3 vueltas y pasa a la siguiente. Una canción nueva es un objeto más en `SONGS`, escrito por compases. La música acelera con `audio.setTension(0..1)`.
 - Reglas visuales completas en `DESIGN.md`.
 
+## Juego online
+
+- El **anfitrión** corre el motor y los bots (igual que en local) y manda a cada invitado la partida pasada por `redactFor` (sin manos ajenas ni mazo).
+- Los **invitados** solo mandan acciones (`Action`); el anfitrión las valida con `applyAction`. Un invitado nunca modifica el estado.
+- Hay latido cada 2 s: si un invitado calla 10 s, su asiento pasa a un bot (`setSeatBot`). Si vuelve con el mismo nombre, lo recupera.
+- Si cambias la forma de `GameState`, el modo online sigue funcionando solo si anfitrión e invitado usan la misma versión del juego (la de GitHub Pages).
+
+## Publicación
+
+Cada push a `main` corre `.github/workflows/pages.yml`: tests, build y publicación en <https://hugofer27.github.io/JuegoDeArmas/>. Si los tests fallan, no se publica.
+
 ## Convenciones
 
 - Todo el texto que ve el jugador, los comentarios y la documentación: **en español**.
@@ -109,6 +127,5 @@ Edita `src/engine/weapons.ts` (daño `near`/`far` y rasgos) y la tabla de la sec
 ## Hoja de ruta
 
 1. ✅ **v0.1**: motor de reglas, bots, simulador, juego local (contra bots y hot-seat), pixel art, animaciones, efectos de sonido y música.
-2. ⏳ **Online**: salas con código, P2P (WebRTC/PeerJS) donde el anfitrión corre el motor, y publicación automática en GitHub Pages.
-3. ⏳ **Galería de cartas** estilo bestiario: todas las cartas con su arte y su % de victorias estimado (sale de `npm run sim`).
-4. ⏳ **Editor de cartas** dentro del juego, sin tocar código.
+2. ✅ **v0.2**: juego online con link (P2P), publicación en GitHub Pages y Compendio de cartas con % de victorias.
+3. ⏳ **Editor de cartas** dentro del juego, sin tocar código.

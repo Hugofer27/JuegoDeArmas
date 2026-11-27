@@ -2283,3 +2283,250 @@ select {
   }
 }
 
+
+/* ---------------------------------------------------------------- inicio: modos */
+
+.setup__modes {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.setup__modes .btn--big {
+  font-size: 34px;
+  min-width: 230px;
+}
+.setup__links {
+  display: flex;
+  gap: 12px;
+}
+.title--small {
+  font-size: 52px;
+}
+
+/* ---------------------------------------------------------------- salas online */
+
+.lobby {
+  align-items: stretch;
+}
+.lobby__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.lobby__code span {
+  font-size: 13px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.lobby__code b {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: 8px;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--outline);
+}
+.lobby__link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.lobby__link input,
+.lobby__namefield input {
+  flex: 1;
+  min-width: 0;
+  background: var(--wood-lo);
+  border: 0;
+  box-shadow: inset 0 0 0 var(--u) var(--outline);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 15px;
+  user-select: text;
+}
+.lobby__namefield {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lobby__namefield input {
+  font-size: 20px;
+}
+.lobby__seats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.lobby__seat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  background: var(--wood-lo);
+  box-shadow: inset 0 0 0 var(--u) var(--seat);
+}
+.lobby__seat.is-bot {
+  box-shadow: inset 0 0 0 var(--u) #3b2417;
+  opacity: 0.7;
+}
+.lobby__name {
+  flex: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lobby__kind {
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+.lobby__error {
+  margin: 0;
+  padding: 10px 12px;
+  background: #3a0f18;
+  box-shadow: inset 0 0 0 2px var(--red);
+  text-align: center;
+}
+.topbar__room {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--outline);
+}
+
+/* ---------------------------------------------------------------- compendio */
+
+.compendium__note {
+  max-width: 78ch;
+  margin: 16px 0 6px;
+  color: var(--ink-dim);
+  line-height: 1.4;
+}
+.compendium__note b {
+  color: var(--ink);
+}
+.compendium__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 10px 0 0;
+  font-weight: 600;
+}
+.compendium__weapons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.wcard {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 12px 10px 8px;
+  background: var(--wood);
+  box-shadow: inset 0 0 0 var(--u) var(--outline), inset 0 calc(var(--u) * 2) 0 0 var(--wood-hi);
+}
+.wcard__name {
+  font-family: var(--display);
+  font-size: 24px;
+  line-height: 1;
+}
+.wcard__name span {
+  color: var(--gold);
+}
+.wcard__text {
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin: 2px 0 4px;
+}
+.wcard__stat {
+  font-size: 13px;
+}
+.compendium__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 28px 0 18px;
+}
+.compendium__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 26px 18px;
+}
+.entry {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.entry .card {
+  cursor: default;
+}
+.stat {
+  width: 172px;
+  padding: 8px 10px 10px;
+  background: #171d38;
+  box-shadow: inset 0 0 0 2px #2b2436;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.stat__main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stat__main b {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1;
+}
+.stat__main span {
+  color: var(--ink-dim);
+}
+.stat__bar {
+  position: relative;
+  height: 9px;
+  margin: 4px 0 6px;
+  background: var(--outline);
+}
+.stat__bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink-dim);
+}
+.stat__bar i {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 15px;
+  background: var(--ink);
+}
+.stat__meta {
+  color: var(--ink-dim);
+}
+.stat--up .stat__main b,
+.stat--up .stat__rel,
+.compendium__summary .stat--up {
+  color: var(--green);
+}
+.stat--up .stat__bar span {
+  background: var(--green);
+}
+.stat--down .stat__main b,
+.stat--down .stat__rel,
+.compendium__summary .stat--down {
+  color: #ff8a74;
+}
+.stat--down .stat__bar span {
+  background: var(--red);
+}
+.stat--none {
+  color: var(--ink-dim);
+}
+.stat code {
+  color: var(--gold);
+}

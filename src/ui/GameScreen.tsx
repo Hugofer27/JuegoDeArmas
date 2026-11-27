@@ -23,14 +23,27 @@ import { Sprite } from './pixel/Sprite';
 import { PALETTE } from './pixel/sprites';
 import { Scene } from './Scene';
 import { updateSettings, useSettings } from './settings';
-import { useLocalMatch } from './useLocalMatch';
+import { useMatch, type NetMode } from './useMatch';
+import { useRoom } from '../net/room';
 import type { MatchConfig } from './Setup';
 
 type Mode = { kind: 'idle' } | { kind: 'card'; uid: string; picks: PlayerId[] } | { kind: 'rebound'; uid: string };
 
 const C = PALETTE;
 
-export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig; onExit: () => void; onRematch: () => void }) {
+export function GameScreen({
+  config,
+  onExit,
+  onRematch,
+  net = { kind: 'local' },
+}: {
+  config: MatchConfig;
+  onExit: () => void;
+  onRematch: () => void;
+  net?: NetMode;
+}) {
+  const guestLink = net.kind === 'guest' ? net.link : null;
+  useRoom(guestLink);
   const settings = useSettings();
   const [paused, setPaused] = useState(false);
   const [winW, setWinW] = useState(() => window.innerWidth);
@@ -39,15 +52,18 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const { state: s, dispatch, setState, undo, canUndo, error, setError } = useLocalMatch(config, {
-    botDelay: settings.speed === 'cine' ? 420 : 110,
-    paused,
-  });
+  const { state: s, dispatch, setState, undo, canUndo, error, setError } = useMatch(
+    config,
+    { botDelay: settings.speed === 'cine' ? 420 : 110, paused },
+    net,
+  );
+  const online = net.kind !== 'local';
 
   const humans = useMemo(() => s.players.filter((p) => !p.isBot).map((p) => p.id), [s.players]);
   const actor = currentActor(s);
   const [revealed, setRevealed] = useState<PlayerId | null>(humans.length === 1 ? humans[0] : null);
-  const viewer: PlayerId = humans.length === 0 ? 0 : (revealed ?? humans[0]);
+  // Online cada uno ve su asiento (anfitrión = 0). Local: el humano que tiene la pantalla.
+  const viewer: PlayerId = guestLink ? guestLink.seat : net.kind === 'host' ? 0 : humans.length === 0 ? 0 : (revealed ?? humans[0]);
 
   // ---------------------------------------------------------------- anclas en pantalla
   const anchors = useRef(new Map<string, HTMLElement>());
@@ -260,7 +276,7 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
   }, [director]);
 
   // ---------------------------------------------------------------- selección y entrada
-  const needsCurtain = humans.length > 1 && actor !== null && !s.players[actor].isBot && revealed !== actor && !busy;
+  const needsCurtain = !online && humans.length > 1 && actor !== null && !s.players[actor].isBot && revealed !== actor && !busy;
   const me = s.players[viewer];
   const meShown = shown[viewer];
   const prompt = !busy && actor === viewer && !needsCurtain && !me.isBot ? s.prompt : null;
@@ -513,6 +529,8 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
             Menú
           </button>
           <span className="topbar__turn">Turno {s.turn.number}</span>
+          {net.kind === 'host' && <span className="topbar__room">Sala {net.room.code}</span>}
+          {net.kind === 'guest' && <span className="topbar__room">Sala {net.link.code}</span>}
         </div>
 
         <div className="hud">
@@ -564,7 +582,7 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
         </div>
         {busy && <div className="skiphint">Espacio: saltar animación</div>}
 
-        {config.dev && (
+        {config.dev && net.kind !== 'guest' && (
           <DevPanel
             s={s}
             viewer={viewer}
@@ -726,6 +744,19 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
         </div>
       )}
 
+      {guestLink && (guestLink.status === 'closed' || guestLink.status === 'error') && (
+        <div className="overlay">
+          <div className="overlay__box">
+            <Sprite name="lapida" scale={6} />
+            <h2>Sin conexión</h2>
+            <p>{guestLink.error || 'Se cortó la conexión con el anfitrión.'}</p>
+            <button className="btn btn--gold" onClick={onExit}>
+              Menú
+            </button>
+          </div>
+        </div>
+      )}
+
       {ended && s.result && (
         <div className="overlay overlay--end">
           <div className="confetti" aria-hidden="true">
@@ -755,16 +786,19 @@ export function GameScreen({ config, onExit, onRematch }: { config: MatchConfig;
             <p>
               {s.result.reason} · {s.turn.number} turnos
             </p>
+            {guestLink && <p>Esperando a que el anfitrión pida la revancha…</p>}
             <div className="overlay__buttons">
-              <button
-                className="btn btn--gold"
-                onClick={() => {
-                  audio.play('click');
-                  onRematch();
-                }}
-              >
-                Revancha
-              </button>
+              {!guestLink && (
+                <button
+                  className="btn btn--gold"
+                  onClick={() => {
+                    audio.play('click');
+                    onRematch();
+                  }}
+                >
+                  Revancha
+                </button>
+              )}
               <button
                 className="btn"
                 onClick={() => {

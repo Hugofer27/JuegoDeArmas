@@ -32,7 +32,17 @@ function load(): { count: number; seats: SeatForm[]; dev: boolean } {
   return { count: 4, seats: defaultSeats(), dev: true };
 }
 
-export function Setup({ onStart, onGallery }: { onStart: (c: MatchConfig) => void; onGallery: () => void }) {
+export function Setup({
+  onStart,
+  onOnline,
+  onGallery,
+  onCompendium,
+}: {
+  onStart: (c: MatchConfig) => void;
+  onOnline: (hostName: string, dev: boolean) => void;
+  onGallery: () => void;
+  onCompendium: () => void;
+}) {
   const saved = load();
   const settings = useSettings();
   const [count, setCount] = useState(saved.count);
@@ -154,18 +164,43 @@ export function Setup({ onStart, onGallery }: { onStart: (c: MatchConfig) => voi
         </div>
 
         <div className="setup__go">
-          <button className="btn btn--big btn--gold" onClick={start}>
-            ¡A la riña!
-          </button>
-          <button
-            className="btn btn--small"
-            onClick={() => {
-              tap();
-              onGallery();
-            }}
-          >
-            Ver arte
-          </button>
+          <div className="setup__modes">
+            <button className="btn btn--big btn--gold" onClick={start}>
+              ¡A la riña!
+              <small>en esta pantalla</small>
+            </button>
+            <button
+              className="btn btn--big"
+              onClick={() => {
+                tap();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ count, seats, dev }));
+                onOnline(seats[0].name.trim() || 'Anfitrión', dev);
+              }}
+            >
+              Jugar online
+              <small>crea una sala y comparte el link</small>
+            </button>
+          </div>
+          <div className="setup__links">
+            <button
+              className="btn btn--small"
+              onClick={() => {
+                tap();
+                onCompendium();
+              }}
+            >
+              Compendio de cartas
+            </button>
+            <button
+              className="btn btn--small"
+              onClick={() => {
+                tap();
+                onGallery();
+              }}
+            >
+              Ver arte
+            </button>
+          </div>
         </div>
       </div>
     </div>

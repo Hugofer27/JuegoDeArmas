@@ -1,0 +1,190 @@
+{
+  "generated": "2026-11-27",
+  "games": 1500,
+  "players": "2-6",
+  "cards": {
+    "ataque_simple": {
+      "uses": 4636,
+      "winRate": 0.3,
+      "expected": 0.257,
+      "playsPerGame": 7.784
+    },
+    "ataque_cercano": {
+      "uses": 3658,
+      "winRate": 0.305,
+      "expected": 0.256,
+      "playsPerGame": 3.992
+    },
+    "ataque_lejano": {
+      "uses": 3006,
+      "winRate": 0.311,
+      "expected": 0.244,
+      "playsPerGame": 3.103
+    },
+    "ataque_doble": {
+      "uses": 3650,
+      "winRate": 0.342,
+      "expected": 0.261,
+      "playsPerGame": 3.8
+    },
+    "escudo": {
+      "uses": 3461,
+      "winRate": 0.314,
+      "expected": 0.253,
+      "playsPerGame": 3.925
+    },
+    "esquiva": {
+      "uses": 3581,
+      "winRate": 0.311,
+      "expected": 0.258,
+      "playsPerGame": 4.1
+    },
+    "escudo_rebote": {
+      "uses": 2227,
+      "winRate": 0.404,
+      "expected": 0.256,
+      "playsPerGame": 1.843
+    },
+    "contraataque": {
+      "uses": 3000,
+      "winRate": 0.368,
+      "expected": 0.257,
+      "playsPerGame": 2.95
+    },
+    "desarmado": {
+      "uses": 2165,
+      "winRate": 0.331,
+      "expected": 0.265,
+      "playsPerGame": 1.848
+    },
+    "trueque": {
+      "uses": 1043,
+      "winRate": 0.393,
+      "expected": 0.266,
+      "playsPerGame": 0.769
+    },
+    "rotacion": {
+      "uses": 448,
+      "winRate": 0.413,
+      "expected": 0.277,
+      "playsPerGame": 0.304
+    },
+    "reajuste": {
+      "uses": 987,
+      "winRate": 0.209,
+      "expected": 0.253,
+      "playsPerGame": 0.685
+    },
+    "sin_camiseta": {
+      "uses": 2031,
+      "winRate": 0.313,
+      "expected": 0.256,
+      "playsPerGame": 1.591
+    },
+    "armadura_laton": {
+      "uses": 2575,
+      "winRate": 0.362,
+      "expected": 0.267,
+      "playsPerGame": 2.469
+    },
+    "armadura_acero": {
+      "uses": 2423,
+      "winRate": 0.359,
+      "expected": 0.262,
+      "playsPerGame": 2.084
+    },
+    "armadura_magica": {
+      "uses": 1581,
+      "winRate": 0.381,
+      "expected": 0.261,
+      "playsPerGame": 1.137
+    },
+    "elixir_de_vida": {
+      "uses": 1443,
+      "winRate": 0.412,
+      "expected": 0.26,
+      "playsPerGame": 1.061
+    },
+    "piedras": {
+      "uses": 2401,
+      "winRate": 0.399,
+      "expected": 0.263,
+      "playsPerGame": 2.407
+    },
+    "pocima_curativa": {
+      "uses": 3131,
+      "winRate": 0.355,
+      "expected": 0.262,
+      "playsPerGame": 3.412
+    },
+    "contagioso": {
+      "uses": 1171,
+      "winRate": 0.385,
+      "expected": 0.268,
+      "playsPerGame": 0.826
+    },
+    "pocima_normalidad": {
+      "uses": 741,
+      "winRate": 0.298,
+      "expected": 0.273,
+      "playsPerGame": 0.515
+    },
+    "regalo_del_cielo": {
+      "uses": 2053,
+      "winRate": 0.452,
+      "expected": 0.27,
+      "playsPerGame": 1.849
+    },
+    "fijado": {
+      "uses": 1302,
+      "winRate": 0.336,
+      "expected": 0.27,
+      "playsPerGame": 0.906
+    },
+    "relegado": {
+      "uses": 1270,
+      "winRate": 0.35,
+      "expected": 0.274,
+      "playsPerGame": 0.871
+    },
+    "vecino": {
+      "uses": 1184,
+      "winRate": 0.304,
+      "expected": 0.268,
+      "playsPerGame": 0.81
+    },
+    "debilucho": {
+      "uses": 2167,
+      "winRate": 0.329,
+      "expected": 0.271,
+      "playsPerGame": 1.681
+    },
+    "super_fuerte": {
+      "uses": 2083,
+      "winRate": 0.394,
+      "expected": 0.275,
+      "playsPerGame": 1.419
+    },
+    "rompe_escudos": {
+      "uses": 1199,
+      "winRate": 0.588,
+      "expected": 0.279,
+      "playsPerGame": 0.805
+    },
+    "kamikaze": {
+      "uses": 1224,
+      "winRate": 0.484,
+      "expected": 0.273,
+      "playsPerGame": 0.819
+    }
+  },
+  "weapons": {
+    "punos": 0.016,
+    "espada": 0.185,
+    "daga": 0.108,
+    "arco": 0.189,
+    "hacha": 0.239,
+    "mangual": 0.213,
+    "garrote": 0.05
+  }
+}

@@ -387,3 +387,19 @@ describe('partidas completas con bots', () => {
     }
   });
 });
+
+describe('online', () => {
+  it('redactFor oculta manos ajenas y el mazo, pero no la propia', async () => {
+    const { redactFor } = await import('../src/engine/redact');
+    const s = createGame({ players: [0, 1, 2].map((i) => ({ name: `P${i}`, isBot: false })), seed: 4 });
+    const v = redactFor(s, 1);
+    expect(v.players[1].hand).toEqual(s.players[1].hand);
+    expect(v.players[0].hand.every((c) => c.defId === 'oculta')).toBe(true);
+    expect(v.players[0].hand).toHaveLength(s.players[0].hand.length);
+    expect(v.deck.every((c) => c.defId === 'oculta')).toBe(true);
+    expect(JSON.stringify(v)).not.toContain(s.players[0].hand[0].uid + '","defId":"' + s.players[0].hand[0].defId);
+    // el invitado puede calcular sus jugadas con la vista oculta
+    expect(() => legalActions(v, v.prompt!.player)).not.toThrow();
+  });
+});
+

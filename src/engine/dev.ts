@@ -37,6 +37,14 @@ export function devApplyStatus(state: GameState, pid: PlayerId, defId: string): 
   });
 }
 
+/** Online: un asiento pasa a manos de un bot (o vuelve a su humano) sin cortar la partida. */
+export function setSeatBot(state: GameState, pid: PlayerId, isBot: boolean): GameState {
+  return edit(state, (s) => {
+    s.players[pid].isBot = isBot;
+    log(s, isBot ? `${s.players[pid].name} se desconectó: lo juega un bot.` : `${s.players[pid].name} volvió a la mesa.`, 'info');
+  });
+}
+
 export function devSetHp(state: GameState, pid: PlayerId, hp: number): GameState {
   return edit(state, (s) => {
     s.players[pid].hp = hp;

@@ -411,7 +411,19 @@ export const CARDS: CardDef[] = [
 const BY_ID = new Map(CARDS.map((c) => [c.id, c]));
 if (BY_ID.size !== CARDS.length) throw new Error('Hay ids de carta repetidos en cards.ts');
 
+/** Carta boca abajo: lo que ve un jugador online de las manos ajenas y del mazo. */
+export const HIDDEN_CARD: CardDef = {
+  id: 'oculta',
+  name: 'Carta oculta',
+  type: 'evento',
+  copies: 0,
+  icon: '',
+  text: '',
+  target: 'none',
+};
+
 export function getCardDef(defId: string): CardDef {
+  if (defId === HIDDEN_CARD.id) return HIDDEN_CARD;
   const def = BY_ID.get(defId);
   if (!def) throw new Error(`Carta desconocida: ${defId}`);
   return def;

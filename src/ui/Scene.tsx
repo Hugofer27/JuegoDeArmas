@@ -56,6 +56,7 @@ export function Scene({ arenaRef }: { arenaRef: RefObject<HTMLElement | null> })
       if (!c || !arena) return;
       const W = Math.ceil(window.innerWidth / PX);
       const H = Math.ceil(window.innerHeight / PX);
+      if (W < 1 || H < 1) return; // pestaña oculta o minimizada: se dibuja al volver
       c.width = W;
       c.height = H;
       c.style.width = `${W * PX}px`;
