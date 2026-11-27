@@ -1,6 +1,6 @@
 # Juego de Armas: Desarmado
 
-Versión digital del juego de cartas de Hugo y Mario, para jugarlo, probar cartas nuevas y balancearlo.
+Versión digital del juego de cartas de Mario y Hugo, para jugarlo, probar cartas nuevas y balancearlo.
 
 **Jugar ahora:** <https://hugofer27.github.io/JuegoDeArmas/>
 
