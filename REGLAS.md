@@ -25,7 +25,7 @@
 | Puños | 1 | 0 | Por defecto si no tienes arma. |
 | Espada | 3 | 0 | — |
 | Daga | 2 | 2 | Si usas una carta de Escudo (Escudo o Escudo Rebote), pierdes la Daga: vuelve al Cofre. |
-| Arco | 1 | 3 | — |
+| Arco | 1 | 4 | — |
 | Hacha | 5 | 3 | Tras atacar con ella quedas **Postrado**: pierdes tu próximo turno completo. |
 | Mangual | 1 | 2 | Sus ataques no se pueden bloquear con Escudo ni Escudo Rebote. |
 | Garrote | 2 | 0 | Ignora la armadura (PA). |
@@ -184,3 +184,4 @@
 ## Historial
 
 - **v0.1 — 2026-11-27.** Primera versión digital. Versión B del documento, respuestas de Hugo a las dudas y mazo de 66 cartas propuesto por Claude.
+- **2026-11-27.** Arco: daño lejano de 3 a 4 (cercano sigue en 1), para que no sea tan débil.

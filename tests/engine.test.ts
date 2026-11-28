@@ -70,19 +70,19 @@ describe('daño', () => {
     expect(s.players[1].hp).toBe(7);
   });
 
-  it('Ataque Lejano con Arco: 3 ×2 = 6, y +1 con Super Fuerte después de duplicar', () => {
+  it('Ataque Lejano con Arco: 4 ×2 = 8, y +1 con Super Fuerte después de duplicar', () => {
     let s = setup(4);
     arm(s, 0, 'arco');
     const [a] = give(s, 0, 'ataque_lejano');
     s = play(s, a, [2]);
-    expect(s.players[2].hp).toBe(4);
+    expect(s.players[2].hp).toBe(2);
 
     let s2 = setup(4);
     arm(s2, 0, 'arco');
     bless(s2, 0, 'super_fuerte');
     const [b] = give(s2, 0, 'ataque_lejano');
     s2 = play(s2, b, [2]);
-    expect(s2.players[2].hp).toBe(3);
+    expect(s2.players[2].hp).toBe(1);
   });
 
   it('la armadura absorbe y se rompe; el Garrote la ignora', () => {

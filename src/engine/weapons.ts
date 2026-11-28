@@ -35,7 +35,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     lostOnShield: true,
     text: 'Si usas Escudo o Escudo Rebote, pierdes la Daga.',
   },
-  arco: { id: 'arco', name: 'Arco', icon: '🏹', near: 1, far: 3, text: 'Sin efecto especial.' },
+  arco: { id: 'arco', name: 'Arco', icon: '🏹', near: 1, far: 4, text: 'Sin efecto especial.' },
   hacha: {
     id: 'hacha',
     name: 'Hacha',
