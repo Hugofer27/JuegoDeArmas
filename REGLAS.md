@@ -90,7 +90,7 @@
 - **Ataque Doble**: 2 ataques a 2 jugadores distintos. Si solo queda 1 rival, los 2 ataques van a él.
 - **Fijado**: si juegas un ataque y puedes incluir a un jugador Fijado como objetivo, debes incluirlo.
 
-## 6. Cartas: mazo de 66
+## 6. Cartas: mazo de 69
 
 ### Ataque (18)
 
@@ -110,11 +110,10 @@
 | Escudo Rebote | 2 | Bloquea y redirige el ataque a otro jugador (puede ser el atacante). No sirve contra Mangual. |
 | Contraataque | 3 | Bloquea y atacas de inmediato al atacante con tu arma. |
 
-### Evento (8)
+### Evento (6)
 
 | Carta | Copias | Efecto |
 |---|---|---|
-| Desarmado | 2 | El arma de un jugador vuelve al Cofre. Después lanzas el Dado de Armas (sin perder tu carta). |
 | Trueque o Robo | 2 | Intercambias tu arma con la de otro jugador. Si no tienes, se la robas. Se puede elegir a alguien sin arma. |
 | Rotación | 1 | Cada jugador pasa su arma al siguiente jugador en orden de turno. **[revisar]** |
 | Reajuste | 1 | Todos los jugadores con más PV que tú quedan desarmados. Única en el mazo. |
@@ -128,10 +127,10 @@
 | Armadura de Acero | 2 | +3 PA. |
 | Armadura Mágica | 1 | +5 PA. |
 
-- Solo 1 armadura equipada. Si equipas otra, la anterior se descarta.
+- Solo 1 armadura equipada. Si ya tienes una, no puedes jugar otra hasta que la tuya se destruya.
 - La Armadura de Cuero (+1 PA) del documento original queda **fuera** (versión B).
 
-### Misterio (11)
+### Misterio (16)
 
 | Carta | Copias | Efecto |
 |---|---|---|
@@ -140,7 +139,7 @@
 | Pócima Curativa | 3 | Cura 2 PV. Puedes pasar de 10. |
 | Contagioso | 1 | Pasa todas tus maldiciones a otro jugador. |
 | Pócima de Normalidad | 1 | Pierdes todas tus bendiciones y maldiciones. |
-| Regalo del Cielo | 2 | Roba 2 cartas. |
+| Regalo del Cielo | 7 | Roba 2 cartas. |
 
 ### Maldición (5)
 
@@ -185,3 +184,4 @@
 
 - **v0.1 — 2026-11-27.** Primera versión digital. Versión B del documento, respuestas de Hugo a las dudas y mazo de 66 cartas propuesto por Claude.
 - **2026-11-27.** Arco: daño lejano de 3 a 4 (cercano sigue en 1), para que no sea tan débil.
+- **v0.2 — 2026-11-27.** Se quita Desarmado (2 copias). No se puede jugar una Armadura si ya tienes una equipada. Regalo del Cielo pasa de 2 a 7 copias. Mazo: 69 cartas.

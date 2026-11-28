@@ -14,13 +14,27 @@ function play(s: GameState, uid: string, targets: number[] = []): GameState {
 }
 
 describe('mazo', () => {
-  it('tiene 66 cartas con las copias de REGLAS.md', () => {
+  it('tiene 69 cartas con las copias de REGLAS.md', () => {
     const deck = buildDeck();
-    expect(deck).toHaveLength(66);
+    expect(deck).toHaveLength(69);
     const byType: Record<string, number> = {};
     for (const c of deck) byType[getCardDef(c.defId).type] = (byType[getCardDef(c.defId).type] ?? 0) + 1;
-    expect(byType).toEqual({ ataque: 18, defensa: 14, evento: 8, armadura: 6, misterio: 11, maldicion: 5, bendicion: 4 });
+    expect(byType).toEqual({ ataque: 18, defensa: 14, evento: 6, armadura: 6, misterio: 16, maldicion: 5, bendicion: 4 });
     expect(CARDS.find((c) => c.id === 'reajuste')!.copies).toBe(1);
+    expect(CARDS.find((c) => c.id === 'regalo_del_cielo')!.copies).toBe(7);
+    expect(CARDS.some((c) => c.id === 'desarmado')).toBe(false);
+  });
+
+  it('no se puede jugar una Armadura si ya tienes una equipada', () => {
+    let s = setup(2);
+    s.players[0].armor = { card: { uid: 'x', defId: 'armadura_laton' }, pa: 2, max: 2 };
+    const [b] = give(s, 0, 'armadura_acero');
+    s = applyAction(s, 0, { type: 'skipRoll' });
+    expect(s.prompt?.kind).toBe('play');
+    expect(legalActions(s, 0).some((x) => x.type === 'play' && x.cardUid === b)).toBe(false);
+    // sin armadura sí se puede
+    s.players[0].armor = null;
+    expect(legalActions(s, 0).some((x) => x.type === 'play' && x.cardUid === b)).toBe(true);
   });
 
   it('reparte 5 cartas y empieza en Fase Arma', () => {
@@ -257,7 +271,7 @@ describe('turno y armas', () => {
     s.deck = [];
     s = applyAction(s, 0, { type: 'skipRoll' });
     expect(s.players[0].hand).toHaveLength(1);
-    expect(s.deck.length + s.discard.length).toBe(65);
+    expect(s.deck.length + s.discard.length).toBe(68);
   });
 
   it('Fijado: los ataques de objetivo único tienen que ir a él', () => {
@@ -383,7 +397,7 @@ describe('partidas completas con bots', () => {
         (n, p) => n + p.hand.length + p.curses.length + p.blessings.length + (p.armor ? 1 : 0),
         0,
       );
-      expect(inPlay + s.deck.length + s.discard.length).toBe(66);
+      expect(inPlay + s.deck.length + s.discard.length).toBe(69);
     }
   });
 });

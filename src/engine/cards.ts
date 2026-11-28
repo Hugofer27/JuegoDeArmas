@@ -28,7 +28,6 @@ import {
   proximity,
   queueTask,
   removeStatus,
-  rollWeapon,
   setWeapon,
 } from './core';
 
@@ -179,22 +178,7 @@ export const CARDS: CardDef[] = [
   },
 
   // ---------------------------------------------------------------- EVENTO
-  {
-    id: 'desarmado',
-    name: 'Desarmado',
-    type: 'evento',
-    copies: 2,
-    icon: '🫳',
-    text: 'El arma de un jugador vuelve al Cofre. Después lanzas el Dado de Armas.',
-    target: 'opponent',
-    play: (s, pid, [t]) => {
-      const victim = P(s, t);
-      if (victim.weapon) log(s, `${victim.name} queda desarmado.`, 'weapon');
-      else log(s, `${victim.name} ya estaba desarmado.`, 'weapon');
-      setWeapon(s, t, null);
-      rollWeapon(s, pid);
-    },
-  },
+  // (v0.2: se quitó la carta Desarmado, que devolvía el arma de un rival al Cofre.)
   {
     id: 'trueque',
     name: 'Trueque o Robo',
@@ -271,9 +255,10 @@ export const CARDS: CardDef[] = [
       type: 'armadura',
       copies,
       icon: pa >= 5 ? '✨' : pa >= 3 ? '🥋' : '🦺',
-      text: `Equípala: +${pa} PA. Los PA absorben daño antes que los PV. Solo 1 armadura a la vez.`,
+      text: `Equípala: +${pa} PA. Los PA absorben daño antes que los PV. No puedes jugarla si ya tienes armadura.`,
       target: 'self',
       armor: pa,
+      canPlay: (s, pid) => !P(s, pid).armor,
       play: (s, pid, _t, card) => {
         equipArmor(s, pid, card, pa);
         log(s, `${P(s, pid).name} se equipa ${name} (${pa} PA).`, 'card');
@@ -346,7 +331,7 @@ export const CARDS: CardDef[] = [
     id: 'regalo_del_cielo',
     name: 'Regalo del Cielo',
     type: 'misterio',
-    copies: 2,
+    copies: 7,
     icon: '🎁',
     text: 'Roba 2 cartas.',
     target: 'self',
