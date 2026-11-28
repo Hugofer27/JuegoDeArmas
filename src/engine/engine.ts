@@ -8,6 +8,7 @@ import type { Action, Attack, CardInstance, GameSetup, GameState, PlayerId, Play
 import {
   addFx,
   alive,
+  declareAttacks,
   discardCard,
   drawCards,
   hasStatus,
@@ -42,6 +43,9 @@ export function createGame(setup: GameSetup): GameState {
     ...setup.options,
     seed,
   };
+  const deck = buildDeck(setup.deckCounts);
+  if (deck.length < n * options.handSize)
+    throw new GameError(`La baraja tiene muy pocas cartas (${deck.length}): necesitas al menos ${n * options.handSize} para ${n} jugadores.`);
   const s: GameState = {
     version: 1,
     options,
@@ -56,13 +60,15 @@ export function createGame(setup: GameSetup): GameState {
         armor: null,
         curses: [],
         blessings: [],
+        bonusDamage: 0,
+        sniper: false,
         prostrated: false,
         eliminated: false,
       }),
     ),
-    deck: buildDeck(),
+    deck,
     discard: [],
-    turn: { player: 0, number: 1, phase: 'start', canPlay: true },
+    turn: { player: 0, number: 1, phase: 'start', canAttack: true, attacksLeft: 1, tempWeapon: false },
     stack: [],
     buffer: [],
     prompt: null,
@@ -91,12 +97,11 @@ export function currentActor(s: GameState): PlayerId | null {
   return s.result || !s.prompt ? null : s.prompt.player;
 }
 
-/** Objetivos válidos para una carta de objetivo único (o candidatos para Ataque Doble). */
+/** Objetivos válidos para una carta de objetivo único. */
 export function cardTargets(s: GameState, pid: PlayerId, def: CardDef): PlayerId[] {
   let list: PlayerId[];
   switch (def.target) {
     case 'opponent':
-    case 'twoOpponents':
       list = opponents(s, pid).map((p) => p.id);
       break;
     case 'farOpponent':
@@ -111,8 +116,15 @@ export function cardTargets(s: GameState, pid: PlayerId, def: CardDef): PlayerId
       return [];
   }
   if (def.validTarget) list = list.filter((t) => def.validTarget!(s, pid, t));
-  if (def.type === 'ataque' && def.target !== 'twoOpponents') list = applyFijado(s, list);
   return list;
+}
+
+/** Objetivos válidos para el ataque de la Fase Atacar (respeta Fijado). */
+export function attackTargets(s: GameState, pid: PlayerId): PlayerId[] {
+  return applyFijado(
+    s,
+    opponents(s, pid).map((p) => p.id),
+  );
 }
 
 /** Fijado: si puedes atacar a un jugador Fijado, tienes que atacarlo a él. */
@@ -139,17 +151,6 @@ export function checkPlay(s: GameState, pid: PlayerId, card: CardInstance, targe
       if (targets.length !== 1) return 'Elige 1 objetivo.';
       return valid.includes(targets[0]) ? null : 'Ese objetivo no es válido.';
     }
-    case 'twoOpponents': {
-      const opps = cardTargets(s, pid, def);
-      if (opps.length === 0) return 'No hay rivales.';
-      if (targets.length !== 2) return 'Elige 2 objetivos.';
-      if (!targets.every((t) => opps.includes(t))) return 'Ese objetivo no es válido.';
-      if (opps.length >= 2 && targets[0] === targets[1]) return 'Los 2 ataques deben ir a jugadores distintos.';
-      const fixed = opps.filter((t) => hasStatus(s.players[t], 'fijado'));
-      if (fixed.length && !targets.some((t) => fixed.includes(t)))
-        return 'Hay un jugador Fijado: uno de los ataques debe ir a él.';
-      return null;
-    }
   }
 }
 
@@ -159,14 +160,8 @@ export function legalPlays(s: GameState, pid: PlayerId): Extract<Action, { type:
   for (const card of s.players[pid].hand) {
     const def = getCardDef(card.defId);
     if (def.type === 'defensa' || !def.play) continue;
-    let combos: PlayerId[][];
-    if (def.target === 'none' || def.target === 'self') combos = [[]];
-    else if (def.target === 'twoOpponents') {
-      const opps = cardTargets(s, pid, def);
-      combos = opps.length === 1 ? [[opps[0], opps[0]]] : [];
-      for (let i = 0; i < opps.length; i++)
-        for (let j = i + 1; j < opps.length; j++) combos.push([opps[i], opps[j]]);
-    } else combos = cardTargets(s, pid, def).map((t) => [t]);
+    const combos: PlayerId[][] =
+      def.target === 'none' || def.target === 'self' ? [[]] : cardTargets(s, pid, def).map((t) => [t]);
     for (const targets of combos)
       if (checkPlay(s, pid, card, targets) === null) out.push({ type: 'play', cardUid: card.uid, targets });
   }
@@ -205,7 +200,11 @@ export function legalActions(s: GameState, pid: PlayerId): Action[] {
     case 'weapon':
       return [{ type: 'roll' }, { type: 'skipRoll' }];
     case 'play':
-      return [{ type: 'endTurn' }, ...legalPlays(s, pid)];
+      return [{ type: 'skipPlay' }, ...legalPlays(s, pid)];
+    case 'chooseWeapon':
+      return pr.weapons.map((weapon) => ({ type: 'chooseWeapon', weapon }));
+    case 'attack':
+      return [{ type: 'endTurn' }, ...attackTargets(s, pid).map((target) => ({ type: 'attack' as const, target }))];
     case 'defend': {
       const out: Action[] = [{ type: 'noDefense' }];
       for (const card of legalDefenses(s, pid, pr.attack)) {
@@ -230,7 +229,7 @@ export function validateAction(s: GameState, pid: PlayerId, a: Action): string |
     case 'roll':
     case 'skipRoll':
       return pr.kind === 'weapon' ? null : 'No estás en la Fase Arma.';
-    case 'endTurn':
+    case 'skipPlay':
       return pr.kind === 'play' ? null : 'No estás en la Fase Jugar.';
     case 'play': {
       if (pr.kind !== 'play') return 'No estás en la Fase Jugar.';
@@ -238,6 +237,14 @@ export function validateAction(s: GameState, pid: PlayerId, a: Action): string |
       if (!card) return 'Esa carta no está en tu mano.';
       return checkPlay(s, pid, card, a.targets);
     }
+    case 'chooseWeapon':
+      if (pr.kind !== 'chooseWeapon') return 'No tienes que elegir un arma.';
+      return pr.weapons.includes(a.weapon) ? null : 'Esa arma no está en el Cofre.';
+    case 'attack':
+      if (pr.kind !== 'attack') return 'No estás en la Fase Atacar.';
+      return attackTargets(s, pid).includes(a.target) ? null : 'Ese objetivo no es válido.';
+    case 'endTurn':
+      return pr.kind === 'attack' ? null : 'No estás en la Fase Atacar.';
     case 'defend': {
       if (pr.kind !== 'defend') return 'No te están atacando.';
       const card = legalDefenses(s, pid, pr.attack).find((c) => c.uid === a.cardUid);
@@ -274,8 +281,8 @@ export function applyAction(state: GameState, pid: PlayerId, action: Action): Ga
   switch (action.type) {
     case 'roll':
       if (p.weapon) {
-        s.turn.canPlay = false;
-        log(s, `${p.name} lanza el dado estando armado: pierde su Fase Jugar.`, 'weapon');
+        s.turn.canAttack = false;
+        log(s, `${p.name} lanza el dado estando armado: pierde su Fase de Ataque.`, 'weapon');
       }
       rollWeapon(s, pid);
       drawCards(s, pid, 1);
@@ -285,11 +292,26 @@ export function applyAction(state: GameState, pid: PlayerId, action: Action): Ga
       drawCards(s, pid, 1);
       s.turn.phase = 'play';
       break;
-    case 'endTurn':
-      s.turn.phase = 'discard';
+    case 'skipPlay':
+      s.turn.phase = 'attack';
       break;
     case 'play':
       doPlay(s, pid, action.cardUid, action.targets);
+      break;
+    case 'chooseWeapon': {
+      const wd = weaponDef(action.weapon);
+      setWeapon(s, pid, action.weapon);
+      s.turn.tempWeapon = true;
+      log(s, `🗝️ ${p.name} toma ${wd.icon} ${wd.name} del Cofre hasta el final del turno.`, 'weapon');
+      break;
+    }
+    case 'attack':
+      s.turn.attacksLeft -= 1;
+      if (s.turn.attacksLeft <= 0) s.turn.phase = 'discard';
+      declareAttacks(s, pid, [action.target], { label: 'Ataque' });
+      break;
+    case 'endTurn':
+      s.turn.phase = 'discard';
       break;
     case 'defend':
       doDefend(s, pid, (pr as Extract<typeof pr, { kind: 'defend' }>).attack, action.cardUid, action.target);
@@ -311,7 +333,7 @@ function doPlay(s: GameState, pid: PlayerId, uid: string, targets: PlayerId[]): 
   const p = s.players[pid];
   const card = removeFromHand(p, uid);
   const def = getCardDef(card.defId);
-  s.turn.phase = 'discard'; // solo 1 carta por turno
+  s.turn.phase = 'attack'; // solo 1 carta por turno; luego Fase Atacar
   s.stats.cardsPlayed[def.id] = (s.stats.cardsPlayed[def.id] ?? 0) + 1;
   const names = [...new Set(targets)].map((t) => s.players[t].name).join(' y ');
   log(s, `🃏 ${p.name} juega ${def.name}${names ? ` → ${names}` : ''}.`, 'card');
@@ -394,11 +416,14 @@ export function advance(s: GameState): void {
         s.prompt = { kind: 'weapon', player: cur.id };
         return;
       case 'play':
-        if (!s.turn.canPlay) {
+        s.prompt = { kind: 'play', player: cur.id };
+        return;
+      case 'attack':
+        if (!s.turn.canAttack || s.turn.attacksLeft <= 0 || opponents(s, cur.id).length === 0) {
           s.turn.phase = 'discard';
           continue;
         }
-        s.prompt = { kind: 'play', player: cur.id };
+        s.prompt = { kind: 'attack', player: cur.id, remaining: s.turn.attacksLeft };
         return;
       case 'discard': {
         const extra = cur.hand.length - s.options.maxHand;
@@ -473,6 +498,11 @@ function runHit(s: GameState, atk: Attack): void {
 }
 
 function nextTurn(s: GameState): void {
+  const prev = s.players[s.turn.player];
+  if (s.turn.tempWeapon && !prev.eliminated && prev.weapon) {
+    log(s, `🗝️ ${prev.name} devuelve su arma temporal al Cofre.`, 'weapon');
+    setWeapon(s, prev.id, null);
+  }
   const n = s.players.length;
   let next = s.turn.player;
   for (let i = 1; i <= n; i++) {
@@ -482,7 +512,7 @@ function nextTurn(s: GameState): void {
       break;
     }
   }
-  s.turn = { player: next, number: s.turn.number + 1, phase: 'start', canPlay: true };
+  s.turn = { player: next, number: s.turn.number + 1, phase: 'start', canAttack: true, attacksLeft: 1, tempWeapon: false };
   s.stats.turns = s.turn.number;
   if (s.options.maxTurns && s.turn.number > s.options.maxTurns) {
     s.result = { winner: null, reason: `Se alcanzó el límite de ${s.options.maxTurns} turnos.` };

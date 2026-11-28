@@ -14,7 +14,7 @@ import type { Attack, CardInstance, CardType, GameState, PlayerId, TargetKind } 
 import {
   addStatus,
   alive,
-  declareAttacks,
+  chestWeapons,
   destroyArmor,
   drawCards,
   equipArmor,
@@ -24,10 +24,10 @@ import {
   log,
   makeAttack,
   applyAttackPenalty,
-  opponents,
   proximity,
   queueTask,
   removeStatus,
+  rollWeapon,
   setWeapon,
 } from './core';
 
@@ -62,52 +62,47 @@ export interface CardDef {
 const P = (s: GameState, id: PlayerId) => s.players[id];
 
 export const CARDS: CardDef[] = [
-  // ---------------------------------------------------------------- ATAQUE
+  // ---------------------------------------------------------------- ASTUCIA
   {
-    id: 'ataque_simple',
-    name: 'Ataque Simple',
-    type: 'ataque',
-    copies: 7,
-    icon: '⚔️',
-    text: 'Ataca a cualquier jugador.',
-    target: 'opponent',
-    play: (s, pid, [t]) => declareAttacks(s, pid, [t], { label: 'Ataque Simple' }),
-  },
-  {
-    id: 'ataque_cercano',
-    name: 'Ataque Cercano',
-    type: 'ataque',
-    copies: 4,
-    icon: '🌀',
-    text: 'Ataca a todos tus jugadores cercanos.',
-    target: 'none',
-    canPlay: (s, pid) => opponents(s, pid).some((q) => proximity(s, pid, q.id) === 'cercano'),
+    id: 'determinacion',
+    name: 'Determinación',
+    type: 'astucia',
+    copies: 3,
+    icon: '🔥',
+    text: 'Tu siguiente ataque hace +2 de daño.',
+    target: 'self',
     play: (s, pid) => {
-      const targets = opponents(s, pid)
-        .filter((q) => proximity(s, pid, q.id) === 'cercano')
-        .map((q) => q.id);
-      declareAttacks(s, pid, targets, { label: 'Ataque Cercano' });
+      P(s, pid).bonusDamage += 2;
+      log(s, `🔥 ${P(s, pid).name} prepara Determinación (+2 daño en su siguiente ataque).`, 'card');
     },
   },
   {
-    id: 'ataque_lejano',
-    name: 'Ataque Lejano',
-    type: 'ataque',
-    copies: 4,
+    id: 'francotirador',
+    name: 'Francotirador',
+    type: 'astucia',
+    copies: 3,
     icon: '🎯',
-    text: 'Ataca a 1 jugador lejano. El daño se duplica.',
-    target: 'farOpponent',
-    play: (s, pid, [t]) => declareAttacks(s, pid, [t], { label: 'Ataque Lejano', multiplier: 2 }),
+    text: 'Tu siguiente ataque lejano inflige el doble de daño.',
+    target: 'self',
+    canPlay: (s, pid) => !P(s, pid).sniper,
+    play: (s, pid) => {
+      P(s, pid).sniper = true;
+      log(s, `🎯 ${P(s, pid).name} apunta como Francotirador (×2 en su siguiente ataque lejano).`, 'card');
+    },
   },
   {
-    id: 'ataque_doble',
-    name: 'Ataque Doble',
-    type: 'ataque',
-    copies: 3,
-    icon: '✖️',
-    text: 'Haz 2 ataques a 2 jugadores distintos. Si solo queda 1 rival, ambos van a él.',
-    target: 'twoOpponents',
-    play: (s, pid, targets) => declareAttacks(s, pid, targets, { label: 'Ataque Doble' }),
+    id: 'brincon',
+    name: 'Brincón',
+    type: 'astucia',
+    copies: 2,
+    icon: '⚡',
+    text: 'Puedes realizar 2 ataques este turno.',
+    target: 'self',
+    canPlay: (s) => s.turn.canAttack,
+    play: (s, pid) => {
+      s.turn.attacksLeft += 1;
+      log(s, `⚡ ${P(s, pid).name} podrá realizar 2 ataques este turno.`, 'card');
+    },
   },
 
   // ---------------------------------------------------------------- DEFENSA
@@ -178,7 +173,22 @@ export const CARDS: CardDef[] = [
   },
 
   // ---------------------------------------------------------------- EVENTO
-  // (v0.2: se quitaron las cartas Desarmado y Rotación.)
+  {
+    id: 'desarmado',
+    name: 'Desarmado',
+    type: 'evento',
+    copies: 2,
+    icon: '🫳',
+    text: 'El arma de un jugador vuelve al Cofre. Después lanzas el Dado de Armas.',
+    target: 'opponent',
+    play: (s, pid, [t]) => {
+      const victim = P(s, t);
+      if (victim.weapon) log(s, `${victim.name} queda desarmado.`, 'weapon');
+      else log(s, `${victim.name} ya estaba desarmado.`, 'weapon');
+      setWeapon(s, t, null);
+      rollWeapon(s, pid);
+    },
+  },
   {
     id: 'trueque',
     name: 'Trueque o Robo',
@@ -194,6 +204,21 @@ export const CARDS: CardDef[] = [
       setWeapon(s, pid, theirs);
       setWeapon(s, t, mine);
       log(s, `${me.name} y ${other.name} intercambian armas.`, 'weapon');
+    },
+  },
+  {
+    id: 'rotacion',
+    name: 'Rotación',
+    type: 'evento',
+    copies: 1,
+    icon: '♻️',
+    text: 'Cada jugador pasa su arma al siguiente jugador en orden de turno.',
+    target: 'none',
+    play: (s) => {
+      const ring = alive(s);
+      const weapons = ring.map((p) => p.weapon);
+      ring.forEach((p, i) => setWeapon(s, p.id, weapons[(i - 1 + ring.length) % ring.length]));
+      log(s, 'Todas las armas rotan al siguiente jugador.', 'weapon');
     },
   },
   {
@@ -223,6 +248,19 @@ export const CARDS: CardDef[] = [
       const withArmor = alive(s).filter((q) => q.armor);
       for (const q of withArmor) destroyArmor(s, q.id);
       log(s, withArmor.length ? `Se destruyen ${withArmor.length} armaduras.` : 'No había armaduras.', 'card');
+    },
+  },
+  {
+    id: 'decidido',
+    name: 'Decidido',
+    type: 'evento',
+    copies: 2,
+    icon: '🗝️',
+    text: 'Elige un arma del Cofre y equípala; la pierdes al final del turno.',
+    target: 'self',
+    canPlay: (s) => chestWeapons(s).length > 0,
+    play: (s, pid) => {
+      s.prompt = { kind: 'chooseWeapon', player: pid, weapons: chestWeapons(s) };
     },
   },
 
@@ -278,9 +316,9 @@ export const CARDS: CardDef[] = [
     type: 'misterio',
     copies: 3,
     icon: '❤️‍🩹',
-    text: 'Cura 2 PV. Puedes pasar de 10.',
+    text: 'Cura 4 PV. Puedes pasar de 10.',
     target: 'self',
-    play: (s, pid) => heal(s, pid, 2),
+    play: (s, pid) => heal(s, pid, 4),
   },
   {
     id: 'contagioso',
@@ -316,7 +354,7 @@ export const CARDS: CardDef[] = [
     id: 'regalo_del_cielo',
     name: 'Regalo del Cielo',
     type: 'misterio',
-    copies: 7,
+    copies: 2,
     icon: '🎁',
     text: 'Roba 2 cartas.',
     target: 'self',
@@ -403,7 +441,7 @@ export function getCardDef(defId: string): CardDef {
 export const STAYS_IN_PLAY: ReadonlySet<CardType> = new Set(['armadura', 'maldicion', 'bendicion']);
 
 export const CARD_TYPE_LABEL: Record<CardType, string> = {
-  ataque: 'Ataque',
+  astucia: 'Astucia',
   defensa: 'Defensa',
   evento: 'Evento',
   armadura: 'Armadura',
@@ -412,10 +450,13 @@ export const CARD_TYPE_LABEL: Record<CardType, string> = {
   bendicion: 'Bendición',
 };
 
-/** Mazo completo sin barajar. */
-export function buildDeck(): CardInstance[] {
+/** Mazo completo sin barajar (o personalizado si se pasa `counts`). */
+export function buildDeck(counts?: Record<string, number>): CardInstance[] {
   const deck: CardInstance[] = [];
   let k = 0;
-  for (const def of CARDS) for (let i = 0; i < def.copies; i++) deck.push({ uid: `c${k++}`, defId: def.id });
+  for (const def of CARDS) {
+    const n = counts ? Math.max(0, Math.floor(counts[def.id] ?? 0)) : def.copies;
+    for (let i = 0; i < n; i++) deck.push({ uid: `c${k++}`, defId: def.id });
+  }
   return deck;
 }

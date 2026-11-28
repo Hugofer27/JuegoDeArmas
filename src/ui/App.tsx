@@ -12,7 +12,7 @@ type Screen =
   | { k: 'gallery' }
   | { k: 'compendium' }
   | { k: 'join'; code: string }
-  | { k: 'host'; room: HostRoom; dev: boolean }
+  | { k: 'host'; room: HostRoom; dev: boolean; deckCounts?: Record<string, number> }
   | { k: 'guest'; link: GuestLink }
   | { k: 'game'; config: MatchConfig; net: NetMode };
 
@@ -76,7 +76,11 @@ export function App() {
               ...names.map((name) => ({ name, isBot: false })),
               ...Array.from({ length: Math.max(0, total - names.length) }, (_, i) => ({ name: `Bot ${names.length + i + 1}`, isBot: true })),
             ];
-            setScreen({ k: 'game', config: { id: Date.now(), setup: { players }, dev: screen.dev }, net: { kind: 'host', room: screen.room } });
+            setScreen({
+              k: 'game',
+              config: { id: Date.now(), setup: { players, deckCounts: screen.deckCounts }, dev: screen.dev },
+              net: { kind: 'host', room: screen.room },
+            });
           }}
         />
       );
@@ -99,7 +103,7 @@ export function App() {
       return (
         <Setup
           onStart={(config) => setScreen({ k: 'game', config, net: { kind: 'local' } })}
-          onOnline={(hostName, dev) => setScreen({ k: 'host', room: new HostRoom(hostName), dev })}
+          onOnline={(hostName, dev, deckCounts) => setScreen({ k: 'host', room: new HostRoom(hostName), dev, deckCounts })}
           onGallery={() => setScreen({ k: 'gallery' })}
           onCompendium={() => setScreen({ k: 'compendium' })}
         />

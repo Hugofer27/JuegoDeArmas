@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
+  attackTargets,
   cardTargets,
   checkPlay,
   currentActor,
@@ -7,7 +8,6 @@ import {
   getCardDef,
   legalDefenses,
   legalPlays,
-  opponents,
   weaponDef,
   type Fx,
   type GameState,
@@ -311,15 +311,11 @@ export function GameScreen({
 
   const selectedCard = mode.kind === 'card' ? me.hand.find((c) => c.uid === mode.uid) : undefined;
   const selectedDef = selectedCard ? getCardDef(selectedCard.defId) : null;
-  const singleOpponent = opponents(s, viewer).length === 1;
-  const needsConfirm =
-    !!selectedDef &&
-    (selectedDef.target === 'none' || selectedDef.target === 'self' || (selectedDef.target === 'twoOpponents' && singleOpponent));
+  const needsConfirm = !!selectedDef && (selectedDef.target === 'none' || selectedDef.target === 'self');
 
   const confirmPlay = () => {
     if (mode.kind !== 'card' || !selectedDef) return;
-    const o = opponents(s, viewer)[0]?.id;
-    act({ type: 'play', cardUid: mode.uid, targets: selectedDef.target === 'twoOpponents' ? [o, o] : [] });
+    act({ type: 'play', cardUid: mode.uid, targets: [] });
   };
 
   const lookFor = (uid: string): CardLook => {
@@ -366,24 +362,19 @@ export function GameScreen({
   };
 
   const targetSet = useMemo(() => {
+    if (prompt?.kind === 'attack') return new Set(attackTargets(s, viewer));
     if (mode.kind === 'rebound') return new Set(defenseTargets(s, viewer));
     if (mode.kind === 'card' && selectedDef && !needsConfirm)
       return new Set(cardTargets(s, viewer, selectedDef).filter((t) => !mode.picks.includes(t)));
     return new Set<PlayerId>();
-  }, [mode, s, viewer, selectedDef, needsConfirm]);
+  }, [prompt, mode, s, viewer, selectedDef, needsConfirm]);
 
   const onTarget = (t: PlayerId) => {
     if (!targetSet.has(t)) return;
+    if (prompt?.kind === 'attack') return act({ type: 'attack', target: t });
     if (mode.kind === 'rebound') return act({ type: 'defend', cardUid: mode.uid, target: t });
     if (mode.kind !== 'card' || !selectedDef) return;
-    if (selectedDef.target === 'twoOpponents') {
-      const picks = [...mode.picks, t];
-      if (picks.length === 2) act({ type: 'play', cardUid: mode.uid, targets: picks });
-      else {
-        audio.play('select');
-        setMode({ ...mode, picks });
-      }
-    } else act({ type: 'play', cardUid: mode.uid, targets: [t] });
+    act({ type: 'play', cardUid: mode.uid, targets: [t] });
   };
 
   // ---------------------------------------------------------------- textos de ayuda
@@ -397,14 +388,29 @@ export function GameScreen({
     else if (who && s.prompt?.kind === 'defend') banner = `${who.name} decide si se defiende…`;
     else banner = `Turno de ${s.players[s.turn.player].name}`;
   } else if (prompt.kind === 'weapon')
-    banner = me.weapon ? 'Fase Arma: si lanzas el dado estando armado, pierdes tu carta del turno.' : 'Fase Arma: estás desarmado, lanzar el dado es gratis.';
+    banner = me.weapon
+      ? 'Fase Arma: si lanzas el dado estando armado, pierdes tu Fase de Ataque (sí robas y juegas carta).'
+      : 'Fase Arma: estás desarmado, lanzar el dado es gratis.';
   else if (prompt.kind === 'play') {
     if (mode.kind === 'card' && selectedDef) {
       bannerKind = 'target';
       if (needsConfirm) banner = `¿Jugar ${selectedDef.name}? Toca la carta otra vez o "Jugar".`;
-      else if (selectedDef.target === 'twoOpponents') banner = `${selectedDef.name}: elige 2 objetivos (${mode.picks.length}/2).`;
       else banner = `${selectedDef.name}: elige a quién.`;
-    } else banner = 'Fase Jugar: elige 1 carta, o termina el turno.';
+    } else
+      banner = s.turn.canAttack
+        ? 'Fase Jugar: elige 1 carta, o pasa a la Fase de Ataque.'
+        : 'Fase Jugar: elige 1 carta, o termina el turno.';
+  } else if (prompt.kind === 'chooseWeapon') {
+    bannerKind = 'target';
+    banner = 'Decidido: elige un arma del Cofre para usar hasta el final del turno.';
+  } else if (prompt.kind === 'attack') {
+    bannerKind = 'target';
+    const buffs = [me.bonusDamage > 0 ? `+${me.bonusDamage} daño` : '', me.sniper ? '×2 lejano' : ''].filter(Boolean);
+    const buffNote = buffs.length ? ` (${buffs.join(', ')})` : '';
+    banner =
+      prompt.remaining > 1
+        ? `Fase de Ataque (${prompt.remaining} ataques)${buffNote}: elige un rival para atacar, o termina el turno.`
+        : `Fase de Ataque${buffNote}: elige un rival para atacar, o termina el turno.`;
   } else if (prompt.kind === 'discard') banner = `Tienes más de 7 cartas: descarta ${prompt.count}.`;
   else if (prompt.kind === 'defend' && mode.kind === 'rebound') {
     bannerKind = 'target';
@@ -600,6 +606,29 @@ export function GameScreen({
           />
         )}
         {banner && <div className={`banner${bannerKind ? ` banner--${bannerKind}` : ''}`}>{banner}</div>}
+        {prompt?.kind === 'chooseWeapon' && (
+          <div className="choose-weapon">
+            <div className="choose-weapon__title">Decidido — elige un arma del Cofre</div>
+            <div className="choose-weapon__list">
+              {prompt.weapons.map((wId) => {
+                const wd = weaponDef(wId);
+                return (
+                  <button
+                    key={wId}
+                    className="btn choose-weapon__btn"
+                    onClick={() => act({ type: 'chooseWeapon', weapon: wId })}
+                  >
+                    <Sprite name={wId} scale={3} />
+                    <span>{wd.name}</span>
+                    <small>
+                      {wd.near}/{wd.far}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {defendInfo && (
           <div className="defend">
             <div className="defend__title">
@@ -674,7 +703,7 @@ export function GameScreen({
             <>
               <button className="btn btn--gold" onClick={() => act({ type: 'roll' })}>
                 Lanzar dado
-                <small>{me.weapon ? 'pierdes tu carta' : 'gratis'}</small>
+                <small>{me.weapon ? 'pierdes tu ataque' : 'gratis'}</small>
               </button>
               <button className="btn" onClick={() => act({ type: 'skipRoll' })}>
                 No lanzar
@@ -696,10 +725,15 @@ export function GameScreen({
                 Cancelar
               </button>
             ) : (
-              <button className="btn btn--end" onClick={() => act({ type: 'endTurn' })}>
-                Terminar turno
+              <button className="btn btn--end" onClick={() => act({ type: 'skipPlay' })}>
+                {s.turn.canAttack ? 'Pasar a atacar' : 'Terminar turno'}
               </button>
             ))}
+          {prompt?.kind === 'attack' && (
+            <button className="btn btn--end" onClick={() => act({ type: 'endTurn' })}>
+              Terminar turno
+            </button>
+          )}
           {prompt?.kind === 'defend' &&
             (mode.kind === 'rebound' ? (
               <button className="btn" onClick={() => setMode({ kind: 'idle' })}>

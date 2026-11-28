@@ -4,6 +4,7 @@ import type { GameSetup } from '../engine';
 import { audio } from './audio/audio';
 import { characterOf, SEAT_COLORS } from './components';
 import { Sprite } from './pixel/Sprite';
+import { countDeckTotal, defaultCounts, setActiveDeck, useDecks } from './decks';
 import { updateSettings, useSettings } from './settings';
 
 export interface MatchConfig {
@@ -40,16 +41,22 @@ export function Setup({
   onCompendium,
 }: {
   onStart: (c: MatchConfig) => void;
-  onOnline: (hostName: string, dev: boolean) => void;
+  onOnline: (hostName: string, dev: boolean, deckCounts?: Record<string, number>) => void;
   onGallery: () => void;
   onCompendium: () => void;
 }) {
   const saved = load();
   const settings = useSettings();
+  const deckStore = useDecks();
   const [count, setCount] = useState(saved.count);
   const [seats, setSeats] = useState<SeatForm[]>(saved.seats);
   const [dev, setDev] = useState(saved.dev);
   const [seed, setSeed] = useState('');
+
+  const activeDeck = deckStore.decks.find((d) => d.id === deckStore.activeId) ?? null;
+  const standardTotal = countDeckTotal(defaultCounts());
+  const deckTotal = activeDeck ? countDeckTotal(activeDeck.counts) : standardTotal;
+  const deckTooSmall = deckTotal < count * 5;
 
   const tap = () => {
     audio.unlock();
@@ -58,11 +65,16 @@ export function Setup({
   const update = (i: number, patch: Partial<SeatForm>) => setSeats((prev) => prev.map((s, j) => (j === i ? { ...s, ...patch } : s)));
 
   const start = () => {
+    if (deckTooSmall) return;
     audio.unlock();
     audio.play('turnYou');
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ count, seats, dev }));
     const players = seats.slice(0, count).map((s, i) => ({ name: s.name.trim() || `Jugador ${i + 1}`, isBot: s.isBot }));
-    onStart({ id: Date.now(), setup: { players, seed: seed.trim() ? Number(seed) : undefined }, dev });
+    onStart({
+      id: Date.now(),
+      setup: { players, seed: seed.trim() ? Number(seed) : undefined, deckCounts: activeDeck?.counts },
+      dev,
+    });
   };
 
   return (
@@ -127,6 +139,42 @@ export function Setup({
         <p className="setup__hint">Varios humanos comparten la pantalla: la mano se tapa al cambiar de jugador.</p>
 
         <div className="setup__field">
+          <span className="setup__label">Baraja</span>
+          <div className="setup__deck">
+            <select
+              className="setup__select"
+              value={deckStore.activeId ?? ''}
+              onChange={(e) => {
+                tap();
+                setActiveDeck(e.target.value || null);
+              }}
+              aria-label="Baraja para jugar"
+            >
+              <option value="">Estándar ({standardTotal} cartas)</option>
+              {deckStore.decks.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({countDeckTotal(d.counts)} cartas)
+                </option>
+              ))}
+            </select>
+            <button
+              className="btn btn--small"
+              onClick={() => {
+                tap();
+                onCompendium();
+              }}
+            >
+              Personalizar
+            </button>
+          </div>
+        </div>
+        {deckTooSmall && (
+          <p className="setup__warn">
+            Esta baraja solo tiene {deckTotal} cartas; necesitas al menos {count * 5} para {count} luchadores.
+          </p>
+        )}
+
+        <div className="setup__field">
           <span className="setup__label">Ritmo</span>
           <div className="seg">
             <button
@@ -166,16 +214,17 @@ export function Setup({
 
         <div className="setup__go">
           <div className="setup__modes">
-            <button className="btn btn--big btn--gold" onClick={start}>
+            <button className="btn btn--big btn--gold" onClick={start} disabled={deckTooSmall}>
               ¡A la riña!
               <small>en esta pantalla</small>
             </button>
             <button
               className="btn btn--big"
+              disabled={deckTooSmall}
               onClick={() => {
                 tap();
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({ count, seats, dev }));
-                onOnline(seats[0].name.trim() || 'Anfitrión', dev);
+                onOnline(seats[0].name.trim() || 'Anfitrión', dev, activeDeck?.counts);
               }}
             >
               Jugar online

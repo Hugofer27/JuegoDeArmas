@@ -6,6 +6,7 @@ import { CARDS, CARD_TYPE_LABEL, WEAPON_DIE, PUNOS, weaponDef, type CardType } f
 import stats from '../data/card-stats.json';
 import { audio } from './audio/audio';
 import { CardView } from './components';
+import { countDeckTotal, defaultCounts, deleteCustomDeck, saveCustomDeck, setActiveDeck, useDecks } from './decks';
 import { Sprite } from './pixel/Sprite';
 
 interface Stat {
@@ -71,6 +72,67 @@ function StatPlate({ id, copies }: { id: string; copies: number }) {
 export function Compendium({ onBack }: { onBack: () => void }) {
   const [filter, setFilter] = useState<'todas' | CardType>('todas');
   const [sort, setSort] = useState<'tipo' | 'victorias'>('tipo');
+  const deckStore = useDecks();
+
+  const initialDeck = deckStore.decks.find((d) => d.id === deckStore.activeId) ?? null;
+  const [editingId, setEditingId] = useState<string | null>(initialDeck?.id ?? null);
+  const [deckName, setDeckName] = useState(initialDeck?.name ?? '');
+  const [counts, setCounts] = useState<Record<string, number>>(() =>
+    initialDeck ? { ...defaultCounts(), ...initialDeck.counts } : defaultCounts(),
+  );
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const selectDeck = (id: string | null) => {
+    setNotice(null);
+    if (!id) {
+      setEditingId(null);
+      setDeckName('');
+      setCounts(defaultCounts());
+      return;
+    }
+    const found = deckStore.decks.find((d) => d.id === id);
+    if (!found) return;
+    setEditingId(found.id);
+    setDeckName(found.name);
+    setCounts({ ...defaultCounts(), ...found.counts });
+  };
+
+  const changeQty = (cardId: string, delta: number) => {
+    audio.play('click');
+    setNotice(null);
+    setCounts((prev) => ({
+      ...prev,
+      [cardId]: Math.max(0, Math.min(20, (prev[cardId] ?? 0) + delta)),
+    }));
+  };
+
+  const handleSave = () => {
+    audio.play('click');
+    const id = editingId ?? `deck_${Date.now()}`;
+    const name = deckName.trim() || `Baraja ${deckStore.decks.length + 1}`;
+    const saved = saveCustomDeck({ id, name, counts }, true);
+    setEditingId(saved.id);
+    setDeckName(saved.name);
+    setNotice(`Guardada "${saved.name}" y activada para jugar.`);
+  };
+
+  const handleNew = () => {
+    audio.play('click');
+    setEditingId(null);
+    setDeckName(`Baraja ${deckStore.decks.length + 1}`);
+    setCounts(defaultCounts());
+    setNotice('Nueva baraja lista: ajusta las cantidades y pulsa Guardar.');
+  };
+
+  const handleDelete = () => {
+    if (!editingId) return;
+    audio.play('click');
+    deleteCustomDeck(editingId);
+    setEditingId(null);
+    setDeckName('');
+    setCounts(defaultCounts());
+    setNotice('Baraja eliminada. Volviste a la baraja estándar.');
+  };
 
   const ranked = useMemo(
     () =>
@@ -90,7 +152,8 @@ export function Compendium({ onBack }: { onBack: () => void }) {
     audio.play('click');
     fn();
   };
-  const deckSize = CARDS.reduce((n, c) => n + c.copies, 0);
+  const deckSize = countDeckTotal(counts);
+  const isActive = editingId === deckStore.activeId;
 
   return (
     <div className="gallery compendium">
@@ -135,6 +198,76 @@ export function Compendium({ onBack }: { onBack: () => void }) {
         })}
       </div>
 
+      <section className="deckbar" aria-label="Personalizar baraja">
+        <div className="deckbar__row">
+          <label className="deckbar__label">
+            Baraja:
+            <select
+              className="setup__select"
+              value={editingId ?? ''}
+              onChange={(e) => {
+                audio.play('click');
+                selectDeck(e.target.value || null);
+              }}
+            >
+              <option value="">Estándar ({countDeckTotal(defaultCounts())} cartas)</option>
+              {deckStore.decks.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({countDeckTotal(d.counts)} cartas)
+                </option>
+              ))}
+            </select>
+          </label>
+          <input
+            className="deckbar__name"
+            placeholder="Nombre para guardar…"
+            value={deckName}
+            maxLength={28}
+            onChange={(e) => setDeckName(e.target.value)}
+            aria-label="Nombre de la baraja"
+          />
+          <button className="btn btn--small btn--gold" onClick={handleSave} disabled={deckSize < 10}>
+            {editingId ? 'Guardar cambios' : 'Guardar como nueva'}
+          </button>
+          <button className="btn btn--small" onClick={handleNew}>
+            Nueva
+          </button>
+          <button
+            className="btn btn--small"
+            onClick={tap(() => {
+              setCounts(defaultCounts());
+              setNotice('Cantidades restablecidas a la baraja estándar.');
+            })}
+          >
+            Restablecer
+          </button>
+          {editingId && (
+            <button className="btn btn--small btn--danger" onClick={handleDelete}>
+              Eliminar
+            </button>
+          )}
+          {!isActive && (
+            <button
+              className="btn btn--small"
+              onClick={tap(() => {
+                setActiveDeck(editingId);
+                setNotice(editingId ? 'Baraja activada para jugar.' : 'Baraja estándar activada para jugar.');
+              })}
+            >
+              Usar para jugar
+            </button>
+          )}
+        </div>
+        <div className="deckbar__info">
+          <span>
+            <b>Total:</b> {deckSize} {deckSize === 1 ? 'carta' : 'cartas'}
+            {deckSize < 10 && ' (mínimo 10 para jugar)'}
+          </span>
+          {isActive && <span className="deckbar__active">✓ Activa para jugar</span>}
+          {notice && <span className="deckbar__notice">{notice}</span>}
+        </div>
+      </section>
+
       <div className="compendium__controls">
         <div className="seg" role="group" aria-label="Filtrar por tipo">
           <button className={filter === 'todas' ? 'is-on' : ''} onClick={tap(() => setFilter('todas'))}>
@@ -157,15 +290,37 @@ export function Compendium({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="compendium__grid">
-        {list.map((c) => (
-          <figure key={c.id} className="entry">
-            <figcaption className="entry__title">
-              {c.name} — {c.copies} {c.copies === 1 ? 'carta' : 'cartas'}
-            </figcaption>
-            <CardView defId={c.id} />
-            <StatPlate id={c.id} copies={c.copies} />
-          </figure>
-        ))}
+        {list.map((c) => {
+          const qty = counts[c.id] ?? 0;
+          return (
+            <figure key={c.id} className={`entry${qty === 0 ? ' entry--off' : ''}`}>
+              <figcaption className="entry__title">
+                {c.name} — {qty} {qty === 1 ? 'carta' : 'cartas'}
+              </figcaption>
+              <div className="entry__qty" role="group" aria-label={`Copias de ${c.name}`}>
+                <button
+                  className="btn btn--small"
+                  onClick={() => changeQty(c.id, -1)}
+                  disabled={qty <= 0}
+                  aria-label={`Quitar copia de ${c.name}`}
+                >
+                  −
+                </button>
+                <span>{qty}</span>
+                <button
+                  className="btn btn--small"
+                  onClick={() => changeQty(c.id, 1)}
+                  disabled={qty >= 20}
+                  aria-label={`Agregar copia de ${c.name}`}
+                >
+                  +
+                </button>
+              </div>
+              <CardView defId={c.id} />
+              <StatPlate id={c.id} copies={qty} />
+            </figure>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 {
   "name": "juego-de-armas-desarmado",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "Versión digital del juego de cartas Juego de Armas: Desarmado",
   "scripts": {
