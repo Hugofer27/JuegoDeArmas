@@ -31,25 +31,25 @@ colors:
   type-bendicion: "#f2c94c"
 typography:
   display:
-    fontFamily: "Jersey 10, Pixelify Sans, sans-serif"
-    fontSize: "26px"
-    fontWeight: 400
-    lineHeight: 1
+    fontFamily: "Alegreya, Georgia, serif"
+    fontSize: "22px"
+    fontWeight: 700
+    lineHeight: 1.05
   display-xl:
-    fontFamily: "Jersey 10, Pixelify Sans, sans-serif"
-    fontSize: "64px"
-    fontWeight: 400
-    lineHeight: 1
+    fontFamily: "Alegreya, Georgia, serif"
+    fontSize: "56px"
+    fontWeight: 800
+    lineHeight: 0.95
   body:
-    fontFamily: "Pixelify Sans, system-ui, sans-serif"
+    fontFamily: "Alegreya Sans, system-ui, sans-serif"
     fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.35
   small:
-    fontFamily: "Pixelify Sans, system-ui, sans-serif"
+    fontFamily: "Alegreya Sans, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 400
-    lineHeight: 1.2
+    lineHeight: 1.25
 rounded:
   none: "0px"
 spacing:
@@ -105,8 +105,8 @@ El fondo (suelo de losas, mesa, luz de vela y antorchas) se dibuja píxel a píx
 
 ## Typography
 
-- **Jersey 10** (display): nombres de cartas, botones, títulos, carteles de turno y números de daño. Siempre con sombra dura de 2–4 px en `outline`.
-- **Pixelify Sans** (texto): todo lo que se lee de corrido: texto de cartas, crónica, ayudas. 16 px base, 13 px en cartas, nunca menos de 11 px.
+- **Alegreya** (display, negrita 700/800): nombres de cartas, botones, títulos, carteles de turno y números de daño. Estilo medieval/pergamino con alta legibilidad y sombra dura de 2–4 px en `outline`.
+- **Alegreya Sans** (texto, 400/500/700): todo lo que se lee de corrido: texto de cartas, crónica, ayudas y Compendio. 16 px base, 13 px en cartas, nunca menos de 11 px.
 - El texto claro sobre madera o noche lleva sombra de 1–2 px en `outline` para no perderse sobre el tramado.
 
 ## Layout
@@ -144,7 +144,7 @@ El fondo (suelo de losas, mesa, luz de vela y antorchas) se dibuja píxel a píx
 
 - Do: dibujar todo arte nuevo como sprite de texto en `sprites.ts` con la paleta existente y 1 píxel libre para el contorno automático.
 - Do: escalar sprites solo por enteros (2, 3, 4…) para que los píxeles queden nítidos.
-- Do: usar Jersey 10 para lo que se grita y Pixelify Sans para lo que se lee.
+- Do: usar Alegreya para títulos y botones y Alegreya Sans para todo lo que se lee de corrido.
 - Don't: emojis o caracteres Unicode como íconos; cada ícono es un sprite.
 - Don't: bordes redondeados, degradados suaves, vidrio o desenfoque.
 - Don't: animaciones que bloqueen el juego sin poder saltarlas (Espacio) o acortarlas (Rápido).

@@ -6,8 +6,8 @@
 
 :root {
   --u: 3px;
-  --font: 'Pixelify Sans', system-ui, sans-serif;
-  --display: 'Jersey 10', 'Pixelify Sans', sans-serif;
+  --font: 'Alegreya Sans', system-ui, sans-serif;
+  --display: 'Alegreya', Georgia, serif;
 
   --ink: #f6eedc;
   --ink-dim: #c9bda6;
@@ -79,7 +79,6 @@ body {
   background: var(--night);
   overflow: hidden;
   user-select: none;
-  -webkit-font-smoothing: none;
 }
 
 button,
@@ -190,7 +189,8 @@ select {
   --hi: var(--plank-hi);
   --lo: var(--plank-lo);
   font-family: var(--display);
-  font-size: 26px;
+  font-weight: 700;
+  font-size: 20px;
   line-height: 1;
   letter-spacing: 0.5px;
   color: var(--ink);
@@ -351,9 +351,9 @@ select {
 .title {
   margin: 0;
   font-family: var(--display);
-  font-weight: 400;
-  font-size: 72px;
-  line-height: 0.85;
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 0.95;
   color: var(--gold);
   text-align: center;
   text-shadow:
@@ -395,7 +395,8 @@ select {
 }
 .setup__label {
   font-family: var(--display);
-  font-size: 26px;
+  font-weight: 700;
+  font-size: 20px;
   color: var(--gold);
   text-shadow: 2px 2px 0 var(--outline);
 }
@@ -1262,10 +1263,11 @@ select {
 }
 .card__name {
   width: calc(100% + 14px);
-  padding: 3px 4px 5px;
+  padding: 4px 4px 5px;
   font-family: var(--display);
-  font-size: 22px;
-  line-height: 1;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.05;
   text-align: center;
   color: var(--ink);
   background: var(--frame-dk);
