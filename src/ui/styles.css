@@ -310,6 +310,7 @@ select {
 /* ---------------------------------------------------------------- inicio */
 
 .setup {
+  position: relative;
   height: 100%;
   overflow: auto;
   display: grid;
@@ -318,6 +319,15 @@ select {
   background:
     radial-gradient(ellipse at 50% 40%, rgb(238 138 58 / 0.14), transparent 60%),
     repeating-conic-gradient(#11152a 0 25%, #0e1122 0 50%) 0 0 / 6px 6px;
+}
+.setup__version {
+  position: fixed;
+  right: 14px;
+  bottom: 10px;
+  font-size: 13px;
+  color: var(--ink-dim);
+  opacity: 0.85;
+  pointer-events: none;
 }
 .setup__panel {
   width: min(600px, 100%);
@@ -2460,7 +2470,14 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+.entry__title {
+  width: 172px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--ink);
 }
 .entry .card {
   cursor: default;

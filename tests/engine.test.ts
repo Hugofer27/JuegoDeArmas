@@ -14,15 +14,16 @@ function play(s: GameState, uid: string, targets: number[] = []): GameState {
 }
 
 describe('mazo', () => {
-  it('tiene 69 cartas con las copias de REGLAS.md', () => {
+  it('tiene 68 cartas con las copias de REGLAS.md', () => {
     const deck = buildDeck();
-    expect(deck).toHaveLength(69);
+    expect(deck).toHaveLength(68);
     const byType: Record<string, number> = {};
     for (const c of deck) byType[getCardDef(c.defId).type] = (byType[getCardDef(c.defId).type] ?? 0) + 1;
-    expect(byType).toEqual({ ataque: 18, defensa: 14, evento: 6, armadura: 6, misterio: 16, maldicion: 5, bendicion: 4 });
+    expect(byType).toEqual({ ataque: 18, defensa: 14, evento: 5, armadura: 6, misterio: 16, maldicion: 5, bendicion: 4 });
     expect(CARDS.find((c) => c.id === 'reajuste')!.copies).toBe(1);
     expect(CARDS.find((c) => c.id === 'regalo_del_cielo')!.copies).toBe(7);
     expect(CARDS.some((c) => c.id === 'desarmado')).toBe(false);
+    expect(CARDS.some((c) => c.id === 'rotacion')).toBe(false);
   });
 
   it('no se puede jugar una Armadura si ya tienes una equipada', () => {
@@ -271,7 +272,7 @@ describe('turno y armas', () => {
     s.deck = [];
     s = applyAction(s, 0, { type: 'skipRoll' });
     expect(s.players[0].hand).toHaveLength(1);
-    expect(s.deck.length + s.discard.length).toBe(68);
+    expect(s.deck.length + s.discard.length).toBe(67);
   });
 
   it('Fijado: los ataques de objetivo único tienen que ir a él', () => {
@@ -341,15 +342,6 @@ describe('cartas especiales', () => {
     expect(s.players[1].curses.map((c) => c.defId)).toEqual(['relegado']);
   });
 
-  it('Rotación pasa cada arma al siguiente jugador', () => {
-    let s = setup(3);
-    arm(s, 0, 'espada');
-    arm(s, 1, 'arco');
-    const [r] = give(s, 0, 'rotacion');
-    s = play(s, r);
-    expect(s.players.map((p) => p.weapon)).toEqual([null, 'espada', 'arco']);
-  });
-
   it('Trueque con alguien sin arma: le das la tuya', () => {
     let s = setup(2);
     arm(s, 0, 'hacha');
@@ -397,7 +389,7 @@ describe('partidas completas con bots', () => {
         (n, p) => n + p.hand.length + p.curses.length + p.blessings.length + (p.armor ? 1 : 0),
         0,
       );
-      expect(inPlay + s.deck.length + s.discard.length).toBe(69);
+      expect(inPlay + s.deck.length + s.discard.length).toBe(68);
     }
   });
 });

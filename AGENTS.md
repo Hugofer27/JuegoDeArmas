@@ -88,7 +88,7 @@ DESIGN.md          Sistema visual: colores, tipografías, componentes, reglas.
 2. Usa las funciones de `core.ts` (`declareAttacks`, `loseHp` vía `queueTask`, `heal`, `drawCards`, `rollWeapon`, `addStatus`, `equipArmor`…). Si necesitas algo nuevo, agrégalo a `core.ts`.
 3. Si es una **maldición o bendición pasiva**, el efecto vive donde se usa: busca cómo se hace con `hasStatus(p, 'super_fuerte')` en `core.ts` o `'debilucho'` en `engine.ts`.
 4. Si es una **defensa**, usa el campo `defense` (`blocks`, `isShield`, `needsTarget`, `resolve`) en vez de `play`.
-5. Agrégala a `REGLAS.md` (tabla de su tipo) y ajusta el total del mazo en el test `tiene 69 cartas` de `tests/engine.test.ts`.
+5. Agrégala a `REGLAS.md` (tabla de su tipo) y ajusta el total del mazo en el test `tiene 68 cartas` de `tests/engine.test.ts`.
 6. Agrega un test con su efecto en `tests/engine.test.ts` (copia el estilo de los demás: `setup`, `give`, `play`).
 7. Corre `npm test` y `npm run sim` para ver si rompe el balance.
 
