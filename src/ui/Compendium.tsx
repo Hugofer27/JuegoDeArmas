@@ -134,6 +134,20 @@ export function Compendium({ onBack }: { onBack: () => void }) {
     setNotice('Baraja eliminada. Volviste a la baraja estándar.');
   };
 
+  const handleCopy = async () => {
+    audio.play('click');
+    const payload = JSON.stringify({
+      name: deckName.trim() || (editingId ? 'Baraja personalizada' : 'Estándar'),
+      counts,
+    });
+    try {
+      await navigator.clipboard.writeText(payload);
+      setNotice('Baraja copiada al portapapeles. Ya puedes pegarla en el chat.');
+    } catch {
+      window.prompt('Copia este texto (Ctrl+C):', payload);
+    }
+  };
+
   const ranked = useMemo(
     () =>
       CARDS.filter((c) => relOf(c.id) !== null).sort((a, b) => relOf(b.id)! - relOf(a.id)!),
@@ -231,6 +245,9 @@ export function Compendium({ onBack }: { onBack: () => void }) {
           </button>
           <button className="btn btn--small" onClick={handleNew}>
             Nueva
+          </button>
+          <button className="btn btn--small" onClick={handleCopy}>
+            Copiar baraja
           </button>
           <button
             className="btn btn--small"

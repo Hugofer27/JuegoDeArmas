@@ -6,6 +6,7 @@
 //
 // Ojo: los bots son simples, así que los números orientan pero no son la verdad absoluta.
 
+import { readFileSync } from 'node:fs';
 import { applyAction, createGame } from '../engine/engine';
 import { chooseBotAction } from '../bots/bot';
 import { getCardDef } from '../engine/cards';
@@ -20,6 +21,13 @@ function arg(name: string, fallback: string): string {
 const games = Number(arg('games', '300'));
 const [minP, maxP] = arg('players', '4').split('-').map(Number);
 const seed = Number(arg('seed', '1'));
+const deckFile = arg('deck', '');
+const deckData = deckFile ? (JSON.parse(readFileSync(deckFile, 'utf8')) as { counts?: Record<string, number> } | Record<string, number>) : null;
+const deckCounts: Record<string, number> | undefined = deckData
+  ? 'counts' in deckData && deckData.counts && typeof deckData.counts === 'object'
+    ? deckData.counts
+    : (deckData as Record<string, number>)
+  : undefined;
 const rand = makeRandom(seed);
 
 let draws = 0;
@@ -36,6 +44,7 @@ for (let g = 0; g < games; g++) {
   let s = createGame({
     players: Array.from({ length: n }, (_, i) => ({ name: `Bot ${i + 1}`, isBot: true })),
     seed: seed * 100000 + g,
+    deckCounts,
     options: { logLimit: 0, maxTurns: 400 },
   });
   while (!s.result) s = applyAction(s, s.prompt!.player, chooseBotAction(s, s.prompt!.player, rand));
