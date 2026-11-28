@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import pkg from '../../package.json';
 import type { GameSetup } from '../engine';
 import { audio } from './audio/audio';
 import { characterOf, SEAT_COLORS } from './components';
@@ -202,6 +203,9 @@ export function Setup({
             </button>
           </div>
         </div>
+      </div>
+      <div className="setup__version" aria-label={`Versión ${pkg.version}`}>
+        v{pkg.version}
       </div>
     </div>
   );

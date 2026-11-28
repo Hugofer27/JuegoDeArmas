@@ -90,7 +90,7 @@
 - **Ataque Doble**: 2 ataques a 2 jugadores distintos. Si solo queda 1 rival, los 2 ataques van a él.
 - **Fijado**: si juegas un ataque y puedes incluir a un jugador Fijado como objetivo, debes incluirlo.
 
-## 6. Cartas: mazo de 69
+## 6. Cartas: mazo de 68
 
 ### Ataque (18)
 
@@ -110,12 +110,11 @@
 | Escudo Rebote | 2 | Bloquea y redirige el ataque a otro jugador (puede ser el atacante). No sirve contra Mangual. |
 | Contraataque | 3 | Bloquea y atacas de inmediato al atacante con tu arma. |
 
-### Evento (6)
+### Evento (5)
 
 | Carta | Copias | Efecto |
 |---|---|---|
 | Trueque o Robo | 2 | Intercambias tu arma con la de otro jugador. Si no tienes, se la robas. Se puede elegir a alguien sin arma. |
-| Rotación | 1 | Cada jugador pasa su arma al siguiente jugador en orden de turno. **[revisar]** |
 | Reajuste | 1 | Todos los jugadores con más PV que tú quedan desarmados. Única en el mazo. |
 | Sin Camiseta | 2 | Destruye todas las armaduras en juego. |
 
@@ -185,3 +184,4 @@
 - **v0.1 — 2026-11-27.** Primera versión digital. Versión B del documento, respuestas de Hugo a las dudas y mazo de 66 cartas propuesto por Claude.
 - **2026-11-27.** Arco: daño lejano de 3 a 4 (cercano sigue en 1), para que no sea tan débil.
 - **v0.2 — 2026-11-27.** Se quita Desarmado (2 copias). No se puede jugar una Armadura si ya tienes una equipada. Regalo del Cielo pasa de 2 a 7 copias. Mazo: 69 cartas.
+- **v0.2.1 — 2026-11-27.** Se quita Rotación (1 copia). Mazo: 68 cartas. Se muestra la versión en el menú de inicio y la cantidad de copias por carta en el Compendio.

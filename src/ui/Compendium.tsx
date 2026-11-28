@@ -159,6 +159,9 @@ export function Compendium({ onBack }: { onBack: () => void }) {
       <div className="compendium__grid">
         {list.map((c) => (
           <figure key={c.id} className="entry">
+            <figcaption className="entry__title">
+              {c.name} — {c.copies} {c.copies === 1 ? 'carta' : 'cartas'}
+            </figcaption>
             <CardView defId={c.id} />
             <StatPlate id={c.id} copies={c.copies} />
           </figure>

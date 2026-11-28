@@ -178,7 +178,7 @@ export const CARDS: CardDef[] = [
   },
 
   // ---------------------------------------------------------------- EVENTO
-  // (v0.2: se quitó la carta Desarmado, que devolvía el arma de un rival al Cofre.)
+  // (v0.2: se quitaron las cartas Desarmado y Rotación.)
   {
     id: 'trueque',
     name: 'Trueque o Robo',
@@ -194,21 +194,6 @@ export const CARDS: CardDef[] = [
       setWeapon(s, pid, theirs);
       setWeapon(s, t, mine);
       log(s, `${me.name} y ${other.name} intercambian armas.`, 'weapon');
-    },
-  },
-  {
-    id: 'rotacion',
-    name: 'Rotación',
-    type: 'evento',
-    copies: 1,
-    icon: '♻️',
-    text: 'Cada jugador pasa su arma al siguiente jugador en orden de turno.',
-    target: 'none',
-    play: (s) => {
-      const ring = alive(s);
-      const weapons = ring.map((p) => p.weapon);
-      ring.forEach((p, i) => setWeapon(s, p.id, weapons[(i - 1 + ring.length) % ring.length]));
-      log(s, 'Todas las armas rotan al siguiente jugador.', 'weapon');
     },
   },
   {
