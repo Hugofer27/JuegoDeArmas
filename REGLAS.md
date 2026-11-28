@@ -1,4 +1,4 @@
-# Juego de Armas: Desarmado — Reglas v0.1
+# Juego de Armas: Desarmado — Reglas v0.3
 
 > **Fuente única de verdad de la versión digital.** Si el código y este archivo no coinciden, uno de los dos tiene un bug: se corrige y se anota en el historial (al final).
 >
@@ -25,8 +25,8 @@
 | Puños | 1 | 0 | Por defecto si no tienes arma. |
 | Espada | 3 | 0 | — |
 | Daga | 2 | 2 | Si usas una carta de Escudo (Escudo o Escudo Rebote), pierdes la Daga: vuelve al Cofre. |
-| Arco | 1 | 4 | — |
-| Hacha | 5 | 3 | Tras atacar con ella quedas **Postrado**: pierdes tu próximo turno completo. |
+| Arco | 1 | 3 | — |
+| Hacha | 4 | 3 | Tras atacar con ella quedas **Postrado**: pierdes tu próximo turno completo. |
 | Mangual | 1 | 2 | Sus ataques no se pueden bloquear con Escudo ni Escudo Rebote. |
 | Garrote | 2 | 0 | Ignora la armadura (PA). |
 
@@ -37,25 +37,26 @@
 ## 4. Turno
 
 1. **Inicio.** Si estás Postrado, pierdes el turno entero y se quita el marcador.
-2. **Fase Arma (opcional).** Lanza el Dado de Armas:
+2. **Fase de dado de armas (opcional).** Lanza el Dado de Armas:
    - sale el arma que ya tienes: no pasa nada;
    - el arma está en el Cofre: la equipas;
    - el arma la tiene otro jugador: se la robas (él queda con Puños).
-   - Si ya tenías un arma al lanzar, **pierdes tu Fase Jugar** de este turno. Sin arma, lanzar es gratis.
-3. **Robar** 1 carta.
-4. **Fase Jugar (opcional).** Juegas 1 carta de cualquier tipo excepto Defensa. Armadura, Maldición y Bendición cuentan como tu carta del turno.
-5. **Descarte.** Si tienes más de 7 cartas, descartas hasta quedarte con 7.
+   - Si ya tenías un arma al lanzar, **pierdes tu Fase de Ataque** de este turno (pero sí robas y sí puedes jugar 1 carta). Sin arma, lanzar es gratis.
+3. **Fase de robo.** Robas 1 carta.
+4. **Fase de jugar carta (opcional).** Juegas 1 carta de cualquier tipo excepto Defensa. Armadura, Maldición y Bendición cuentan como tu carta del turno.
+5. **Fase de atacar (opcional).** Atacas a 1 rival con tu arma actual (o Puños). Con **Brincón**, puedes realizar 2 ataques este turno. Si hay un rival **Fijado**, debes atacarlo a él.
+6. **Final del turno.** Si usaste **Decidido**, tu arma temporal vuelve al Cofre. Si tienes más de 7 cartas, descartas hasta quedarte con 7.
 
 - **Mazo vacío:** se baraja el descarte (todo lo que no está en uso) y forma el mazo nuevo.
-- Se puede jugar una carta aunque no tenga efecto (por ejemplo, Contagioso sin maldiciones). Los ataques sí necesitan un objetivo válido. **[revisar]**
+- Se puede jugar una carta aunque no tenga efecto (por ejemplo, Contagioso sin maldiciones). **[revisar]**
 
 ## 5. Combate
 
 ### 5.1 Daño de un ataque, en este orden
 
 1. Daño del arma del atacante según la proximidad del objetivo.
-2. ×2 si es Ataque Lejano.
-3. +1 si el atacante tiene Super Fuerte (se suma aunque el daño base sea 0). **[revisar]**
+2. ×2 si el atacante tiene **Francotirador** y el objetivo es lejano (se consume).
+3. +2 por cada **Determinación** acumulada (se consume) y +1 si el atacante tiene **Super Fuerte** (se suma aunque el daño base sea 0). **[revisar]**
 4. Defensa del objetivo, si juega una.
 5. La armadura absorbe el daño (salvo Garrote). Los PA **se gastan**; al llegar a 0 la armadura se destruye.
 6. El daño que queda se resta de los PV.
@@ -84,22 +85,19 @@
 - Piedras y Kamikaze quitan PV directo: no son ataques, no se pueden defender e ignoran la armadura.
 - Se permiten las cadenas de Kamikaze (dos Kamikaze se activan entre sí). Terminan solas porque los PV se acaban; si caen todos a la vez, es empate.
 
-### 5.5 Ataques con varios objetivos
+### 5.5 Objetivo obligado (Fijado)
 
-- **Ataque Cercano**: un ataque a cada jugador cercano; cada uno se defiende por separado.
-- **Ataque Doble**: 2 ataques a 2 jugadores distintos. Si solo queda 1 rival, los 2 ataques van a él.
-- **Fijado**: si juegas un ataque y puedes incluir a un jugador Fijado como objetivo, debes incluirlo.
+- **Fijado**: en tu Fase de Ataque, si hay un jugador Fijado, debes atacarlo a él.
 
-## 6. Cartas: mazo de 68
+## 6. Cartas: mazo de 58 (personalizable desde el Compendio)
 
-### Ataque (18)
+### Astucia (8)
 
 | Carta | Copias | Efecto |
 |---|---|---|
-| Ataque Simple | 7 | Ataca a cualquier jugador. |
-| Ataque Cercano | 4 | Ataca a todos tus jugadores cercanos. |
-| Ataque Lejano | 4 | Ataca a 1 jugador lejano. El daño se duplica. |
-| Ataque Doble | 3 | 2 ataques a 2 jugadores distintos (si solo queda 1 rival, ambos a él). |
+| Determinación | 3 | Tu siguiente ataque hace +2 de daño. |
+| Francotirador | 3 | Tu siguiente ataque lejano inflige el doble de daño. |
+| Brincón | 2 | Puedes realizar 2 ataques este turno. |
 
 ### Defensa (14)
 
@@ -110,13 +108,16 @@
 | Escudo Rebote | 2 | Bloquea y redirige el ataque a otro jugador (puede ser el atacante). No sirve contra Mangual. |
 | Contraataque | 3 | Bloquea y atacas de inmediato al atacante con tu arma. |
 
-### Evento (5)
+### Evento (10)
 
 | Carta | Copias | Efecto |
 |---|---|---|
+| Desarmado | 2 | El arma de un jugador vuelve al Cofre. Después lanzas el Dado de Armas. |
 | Trueque o Robo | 2 | Intercambias tu arma con la de otro jugador. Si no tienes, se la robas. Se puede elegir a alguien sin arma. |
+| Rotación | 1 | Cada jugador pasa su arma al siguiente jugador en orden de turno. **[revisar]** |
 | Reajuste | 1 | Todos los jugadores con más PV que tú quedan desarmados. Única en el mazo. |
 | Sin Camiseta | 2 | Destruye todas las armaduras en juego. |
+| Decidido | 2 | Elige un arma del Cofre y equípala; la pierdes al final del turno. |
 
 ### Armadura (6)
 
@@ -129,16 +130,16 @@
 - Solo 1 armadura equipada. Si ya tienes una, no puedes jugar otra hasta que la tuya se destruya.
 - La Armadura de Cuero (+1 PA) del documento original queda **fuera** (versión B).
 
-### Misterio (16)
+### Misterio (11)
 
 | Carta | Copias | Efecto |
 |---|---|---|
 | Elixir de Vida | 1 | Si tienes menos de 10 PV, subes a 10. |
 | Piedras | 3 | Quita 1 PV a un jugador (pérdida directa). |
-| Pócima Curativa | 3 | Cura 2 PV. Puedes pasar de 10. |
+| Pócima Curativa | 3 | Cura 4 PV. Puedes pasar de 10. |
 | Contagioso | 1 | Pasa todas tus maldiciones a otro jugador. |
 | Pócima de Normalidad | 1 | Pierdes todas tus bendiciones y maldiciones. |
-| Regalo del Cielo | 7 | Roba 2 cartas. |
+| Regalo del Cielo | 2 | Roba 2 cartas. |
 
 ### Maldición (5)
 
@@ -185,3 +186,4 @@
 - **2026-11-27.** Arco: daño lejano de 3 a 4 (cercano sigue en 1), para que no sea tan débil.
 - **v0.2 — 2026-11-27.** Se quita Desarmado (2 copias). No se puede jugar una Armadura si ya tienes una equipada. Regalo del Cielo pasa de 2 a 7 copias. Mazo: 69 cartas.
 - **v0.2.1 — 2026-11-27.** Se quita Rotación (1 copia). Mazo: 68 cartas. Se muestra la versión en el menú de inicio y la cantidad de copias por carta en el Compendio.
+- **v0.3 — 2026-11-28.** Se eliminan las cartas de Ataque: el ataque pasa a ser una fase del turno (Dado → Robo → Jugar carta → Atacar → Final). Lanzar el dado estando armado hace perder la Fase de Ataque (no robo ni jugar carta). Pócima Curativa cura 4 PV, Arco vuelve a 1/3, Hacha baja a 4/3. Vuelven Desarmado (2), Rotación (1) y Regalo del Cielo (2). Nuevas cartas: Determinación, Francotirador y Brincón (tipo Astucia) y Decidido (Evento). Mazo estándar: 58 cartas, personalizable y guardable desde el Compendio.

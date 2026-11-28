@@ -987,6 +987,82 @@ const FLECHA: Grid = [
   '................',
 ];
 
+const DETERMINACION: Grid = [
+  '................',
+  '.......o........',
+  '......oyo.......',
+  '.....oywyo......',
+  '....ooywyoo.....',
+  '....orywyro.....',
+  '...orrywyrro....',
+  '...orrrrrrro....',
+  '...orrrrrrro....',
+  '....orrrrro.....',
+  '.....orrro......',
+  '......ooo.......',
+  '.....yyyyy......',
+  '....yYYYYYy.....',
+  '................',
+  '................',
+];
+
+const FRANCOTIRADOR: Grid = [
+  '................',
+  '.......c........',
+  '.....ccccc......',
+  '....cc.c.cc.....',
+  '...cc..c..cc....',
+  '..cc...c...cc...',
+  '..c....r....c...',
+  '.cccccrwccccc...',
+  '..c....r....c...',
+  '..cc...c...cc...',
+  '...cc..c..cc....',
+  '....cc.c.cc.....',
+  '.....ccccc......',
+  '.......c........',
+  '................',
+  '................',
+];
+
+const BRINCON: Grid = [
+  '................',
+  '.........yy.....',
+  '........yyw.....',
+  '.......yyw......',
+  '......yyyyy.....',
+  '.....yyyyw......',
+  '....yy..yy......',
+  '...yy..yy.......',
+  '......yyyyy.....',
+  '.....yyyyw......',
+  '....yy..yy......',
+  '...yy..yy.......',
+  '..yy..yy........',
+  '..y...y.........',
+  '................',
+  '................',
+];
+
+const DECIDIDO: Grid = [
+  '................',
+  '......wgg.......',
+  '.....wggg.......',
+  '......gg........',
+  '......yy........',
+  '..yyyyyyyyyyyy..',
+  '.yYYYYYYYYYYYYy.',
+  '.ynnnnnnnnnnnny.',
+  '.ynnnnnYYnnnnny.',
+  '.ynnnnYwwYnnnny.',
+  '.ynnnnnYYnnnnny.',
+  '.ynnnnnnnnnnnny.',
+  '.yNNNNNNNNNNNNy.',
+  '..yyyyyyyyyyyy..',
+  '................',
+  '................',
+];
+
 // ---------------------------------------------------------------- registro
 
 export const SPRITES: Record<string, SpriteDef> = {
@@ -999,6 +1075,10 @@ export const SPRITES: Record<string, SpriteDef> = {
   mangual: { rows: MANGUAL },
   garrote: { rows: GARROTE },
   // cartas (mismo id que en cards.ts)
+  determinacion: { rows: DETERMINACION },
+  francotirador: { rows: FRANCOTIRADOR },
+  brincon: { rows: BRINCON },
+  decidido: { rows: DECIDIDO },
   ataque_simple: { rows: ATAQUE_SIMPLE },
   ataque_cercano: { rows: ATAQUE_CERCANO },
   ataque_lejano: { rows: ATAQUE_LEJANO },

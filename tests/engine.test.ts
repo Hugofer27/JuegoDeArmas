@@ -7,23 +7,42 @@ import { makeRandom } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { arm, bless, curse, give, setup } from './helpers';
 
-/** P0 pasa la Fase Arma sin lanzar y juega una carta. */
+/** Pasa la Fase Arma sin lanzar y juega una carta. */
 function play(s: GameState, uid: string, targets: number[] = []): GameState {
   if (s.prompt?.kind === 'weapon') s = applyAction(s, s.prompt.player, { type: 'skipRoll' });
   return applyAction(s, s.turn.player, { type: 'play', cardUid: uid, targets });
 }
 
+/** Pasa hasta la Fase de Ataque (si hace falta) y ataca a `target`. */
+function attack(s: GameState, target: number): GameState {
+  if (s.prompt?.kind === 'weapon') s = applyAction(s, s.prompt.player, { type: 'skipRoll' });
+  if (s.prompt?.kind === 'play') s = applyAction(s, s.prompt.player, { type: 'skipPlay' });
+  return applyAction(s, s.turn.player, { type: 'attack', target });
+}
+
 describe('mazo', () => {
-  it('tiene 68 cartas con las copias de REGLAS.md', () => {
+  it('tiene 58 cartas con las copias de REGLAS.md', () => {
     const deck = buildDeck();
-    expect(deck).toHaveLength(68);
+    expect(deck).toHaveLength(58);
     const byType: Record<string, number> = {};
     for (const c of deck) byType[getCardDef(c.defId).type] = (byType[getCardDef(c.defId).type] ?? 0) + 1;
-    expect(byType).toEqual({ ataque: 18, defensa: 14, evento: 5, armadura: 6, misterio: 16, maldicion: 5, bendicion: 4 });
+    expect(byType).toEqual({ astucia: 8, defensa: 14, evento: 10, armadura: 6, misterio: 11, maldicion: 5, bendicion: 4 });
     expect(CARDS.find((c) => c.id === 'reajuste')!.copies).toBe(1);
-    expect(CARDS.find((c) => c.id === 'regalo_del_cielo')!.copies).toBe(7);
-    expect(CARDS.some((c) => c.id === 'desarmado')).toBe(false);
-    expect(CARDS.some((c) => c.id === 'rotacion')).toBe(false);
+    expect(CARDS.find((c) => c.id === 'desarmado')!.copies).toBe(2);
+    expect(CARDS.find((c) => c.id === 'rotacion')!.copies).toBe(1);
+    expect(CARDS.find((c) => c.id === 'regalo_del_cielo')!.copies).toBe(2);
+  });
+
+  it('permite crear una partida con baraja personalizada', () => {
+    const counts = { escudo: 10, pocima_curativa: 6, determinacion: 4 };
+    const s = createGame({
+      players: [{ name: 'A', isBot: false }, { name: 'B', isBot: false }],
+      seed: 1,
+      deckCounts: counts,
+    });
+    const total = s.deck.length + s.players.reduce((n, p) => n + p.hand.length, 0);
+    expect(total).toBe(20);
+    expect(s.deck.every((c) => c.defId in counts)).toBe(true);
   });
 
   it('no se puede jugar una Armadura si ya tienes una equipada', () => {
@@ -76,68 +95,71 @@ describe('proximidad', () => {
   });
 });
 
-describe('daño', () => {
+describe('daño y cartas de Astucia', () => {
   it('Espada a cercano: 3', () => {
     let s = setup(2);
     arm(s, 0, 'espada');
-    const [a] = give(s, 0, 'ataque_simple');
-    s = play(s, a, [1]);
+    s = attack(s, 1);
     expect(s.players[1].hp).toBe(7);
   });
 
-  it('Ataque Lejano con Arco: 4 ×2 = 8, y +1 con Super Fuerte después de duplicar', () => {
+  it('Arco a lejano: 3, con Francotirador 3 ×2 = 6, y +1 con Super Fuerte después de duplicar', () => {
     let s = setup(4);
     arm(s, 0, 'arco');
-    const [a] = give(s, 0, 'ataque_lejano');
-    s = play(s, a, [2]);
-    expect(s.players[2].hp).toBe(2);
+    const [f] = give(s, 0, 'francotirador');
+    s = play(s, f);
+    s = attack(s, 2);
+    expect(s.players[2].hp).toBe(4);
+    expect(s.players[0].sniper).toBe(false);
 
     let s2 = setup(4);
     arm(s2, 0, 'arco');
     bless(s2, 0, 'super_fuerte');
-    const [b] = give(s2, 0, 'ataque_lejano');
-    s2 = play(s2, b, [2]);
-    expect(s2.players[2].hp).toBe(1);
+    const [f2] = give(s2, 0, 'francotirador');
+    s2 = play(s2, f2);
+    s2 = attack(s2, 2);
+    expect(s2.players[2].hp).toBe(3);
+  });
+
+  it('Determinación suma +2 al siguiente ataque y se consume', () => {
+    let s = setup(2);
+    arm(s, 0, 'espada');
+    const [d] = give(s, 0, 'determinacion');
+    s = play(s, d);
+    expect(s.players[0].bonusDamage).toBe(2);
+    s = attack(s, 1);
+    expect(s.players[1].hp).toBe(5);
+    expect(s.players[0].bonusDamage).toBe(0);
+  });
+
+  it('Brincón permite realizar 2 ataques en el mismo turno', () => {
+    let s = setup(3);
+    arm(s, 0, 'espada');
+    const [b] = give(s, 0, 'brincon');
+    s = play(s, b);
+    expect(s.prompt).toEqual({ kind: 'attack', player: 0, remaining: 2 });
+    s = attack(s, 1);
+    expect(s.players[1].hp).toBe(7);
+    expect(s.prompt).toEqual({ kind: 'attack', player: 0, remaining: 1 });
+    s = attack(s, 2);
+    expect(s.players[2].hp).toBe(7);
+    expect(s.turn.player).toBe(1);
   });
 
   it('la armadura absorbe y se rompe; el Garrote la ignora', () => {
     let s = setup(2);
     arm(s, 0, 'espada');
     s.players[1].armor = { card: { uid: 'x', defId: 'armadura_laton' }, pa: 2, max: 2 };
-    const [a] = give(s, 0, 'ataque_simple');
-    s = play(s, a, [1]);
+    s = attack(s, 1);
     expect(s.players[1].hp).toBe(9);
     expect(s.players[1].armor).toBeNull();
 
     let g = setup(2);
     arm(g, 0, 'garrote');
     g.players[1].armor = { card: { uid: 'y', defId: 'armadura_acero' }, pa: 3, max: 3 };
-    const [b] = give(g, 0, 'ataque_simple');
-    g = play(g, b, [1]);
+    g = attack(g, 1);
     expect(g.players[1].hp).toBe(8);
     expect(g.players[1].armor?.pa).toBe(3);
-  });
-
-  it('Ataque Cercano golpea a los dos vecinos y no al de enfrente', () => {
-    let s = setup(4);
-    arm(s, 0, 'espada');
-    const [a] = give(s, 0, 'ataque_cercano');
-    s = play(s, a);
-    expect(s.players.map((p) => p.hp)).toEqual([10, 7, 10, 7]);
-  });
-
-  it('Ataque Doble con 2 jugadores: los 2 ataques van al único rival', () => {
-    let s = setup(2);
-    const [a] = give(s, 0, 'ataque_doble');
-    s = play(s, a, [1, 1]);
-    expect(s.players[1].hp).toBe(8);
-  });
-
-  it('Ataque Doble con más rivales no puede repetir objetivo', () => {
-    let s = setup(3);
-    const [a] = give(s, 0, 'ataque_doble');
-    s = applyAction(s, 0, { type: 'skipRoll' });
-    expect(() => applyAction(s, 0, { type: 'play', cardUid: a, targets: [1, 1] })).toThrow();
   });
 });
 
@@ -147,8 +169,9 @@ describe('defensas', () => {
     arm(s, 0, weapon);
     setupFn?.(s);
     const uids = give(s, 1, ...defense);
-    const [a] = give(s, 0, 'ataque_simple');
-    s = play(s, a, [1]);
+    s = applyAction(s, 0, { type: 'skipRoll' });
+    s.players[0].hand = []; // P0 no tiene defensas que interrumpan el contraataque/rebote
+    s = attack(s, 1);
     return { s, uids };
   }
 
@@ -220,28 +243,32 @@ describe('defensas', () => {
 });
 
 describe('turno y armas', () => {
-  it('Hacha: tras atacar pierde su próximo turno', () => {
+  it('Hacha: pega 4 a cercano y tras atacar pierde su próximo turno', () => {
     let s = setup(2);
     arm(s, 0, 'hacha');
-    const [a] = give(s, 0, 'ataque_simple');
-    s = play(s, a, [1]);
-    expect(s.players[1].hp).toBe(5);
+    s = attack(s, 1);
+    expect(s.players[1].hp).toBe(6);
     expect(s.players[0].prostrated).toBe(true);
     // turno de P1
     expect(s.turn.player).toBe(1);
     s = applyAction(s, 1, { type: 'skipRoll' });
+    s = applyAction(s, 1, { type: 'skipPlay' });
     s = applyAction(s, 1, { type: 'endTurn' });
     // P0 se salta y vuelve P1
     expect(s.turn.player).toBe(1);
     expect(s.players[0].prostrated).toBe(false);
   });
 
-  it('lanzar el dado estando armado hace perder la Fase Jugar', () => {
+  it('lanzar el dado estando armado hace perder la Fase de Ataque, pero sí roba y juega carta', () => {
     let s = setup(2);
     arm(s, 0, 'espada');
-    give(s, 0, 'ataque_simple');
+    const [p] = give(s, 0, 'pocima_curativa');
     s = applyAction(s, 0, { type: 'roll' });
-    expect(s.turn.player).toBe(1); // pasó directo al siguiente
+    expect(s.players[0].hand).toHaveLength(2); // robó 1 carta
+    expect(s.prompt).toEqual({ kind: 'play', player: 0 }); // sí puede jugar carta
+    s = applyAction(s, 0, { type: 'play', cardUid: p, targets: [] });
+    expect(s.players[0].hp).toBe(14);
+    expect(s.turn.player).toBe(1); // perdió la Fase de Ataque y pasó al siguiente
   });
 
   it('el dado roba el arma a quien la tenga', () => {
@@ -258,6 +285,7 @@ describe('turno y armas', () => {
     let s = setup(2);
     give(s, 0, ...Array(8).fill('piedras'));
     s = applyAction(s, 0, { type: 'skipRoll' });
+    s = applyAction(s, 0, { type: 'skipPlay' });
     s = applyAction(s, 0, { type: 'endTurn' });
     expect(s.prompt).toEqual({ kind: 'discard', player: 0, count: 2 });
     const uids = s.players[0].hand.slice(0, 2).map((c) => c.uid);
@@ -272,20 +300,19 @@ describe('turno y armas', () => {
     s.deck = [];
     s = applyAction(s, 0, { type: 'skipRoll' });
     expect(s.players[0].hand).toHaveLength(1);
-    expect(s.deck.length + s.discard.length).toBe(67);
+    expect(s.deck.length + s.discard.length).toBe(57);
   });
 
-  it('Fijado: los ataques de objetivo único tienen que ir a él', () => {
+  it('Fijado: los ataques en Fase de Ataque tienen que ir a él', () => {
     let s = setup(4);
     curse(s, 2, 'fijado');
-    const mine = give(s, 0, 'ataque_simple', 'ataque_doble');
     s = applyAction(s, 0, { type: 'skipRoll' });
-    const plays = legalActions(s, 0).filter((a) => a.type === 'play' && mine.includes(a.cardUid)) as Extract<
+    s = applyAction(s, 0, { type: 'skipPlay' });
+    const attacks = legalActions(s, 0).filter((a) => a.type === 'attack') as Extract<
       ReturnType<typeof legalActions>[number],
-      { type: 'play' }
+      { type: 'attack' }
     >[];
-    expect(plays.length).toBeGreaterThan(0);
-    for (const p of plays) expect(p.targets).toContain(2);
+    expect(attacks.map((a) => a.target)).toEqual([2]);
   });
 
   it('el eliminado devuelve su arma al Cofre', () => {
@@ -293,14 +320,26 @@ describe('turno y armas', () => {
     arm(s, 0, 'espada');
     arm(s, 1, 'arco');
     s.players[1].hp = 2;
-    const [a] = give(s, 0, 'ataque_simple');
-    s = play(s, a, [1]);
+    s = attack(s, 1);
     expect(s.players[1].eliminated).toBe(true);
     expect(s.players[1].weapon).toBeNull();
   });
 });
 
 describe('cartas especiales', () => {
+  it('Decidido: eliges un arma del Cofre, atacas con ella y la pierdes al final del turno', () => {
+    let s = setup(2);
+    const [d] = give(s, 0, 'decidido');
+    s = play(s, d);
+    expect(s.prompt?.kind).toBe('chooseWeapon');
+    s = applyAction(s, 0, { type: 'chooseWeapon', weapon: 'espada' });
+    expect(s.players[0].weapon).toBe('espada');
+    s = attack(s, 1);
+    expect(s.players[1].hp).toBe(7);
+    expect(s.players[0].weapon).toBeNull(); // devuelta al Cofre al terminar el turno
+    expect(s.turn.player).toBe(1);
+  });
+
   it('Kamikaze en cadena puede acabar en empate', () => {
     let s = setup(2);
     bless(s, 0, 'kamikaze');
@@ -321,7 +360,7 @@ describe('cartas especiales', () => {
     expect(s.players.filter((p) => !p.eliminated).length).toBeLessThanOrEqual(1);
   });
 
-  it('Elixir sube a 10 pero no baja; Pócima Curativa pasa de 10', () => {
+  it('Elixir sube a 10 pero no baja; Pócima Curativa cura 4 y pasa de 10', () => {
     let s = setup(2);
     s.players[0].hp = 4;
     const [e] = give(s, 0, 'elixir_de_vida');
@@ -331,7 +370,7 @@ describe('cartas especiales', () => {
     let t = setup(2);
     const [p] = give(t, 0, 'pocima_curativa');
     t = play(t, p);
-    expect(t.players[0].hp).toBe(12);
+    expect(t.players[0].hp).toBe(14);
   });
 
   it('Relegado reemplaza a Vecino en el mismo jugador', () => {
@@ -340,6 +379,15 @@ describe('cartas especiales', () => {
     const [r] = give(s, 0, 'relegado');
     s = play(s, r, [1]);
     expect(s.players[1].curses.map((c) => c.defId)).toEqual(['relegado']);
+  });
+
+  it('Rotación pasa cada arma al siguiente jugador', () => {
+    let s = setup(3);
+    arm(s, 0, 'espada');
+    arm(s, 1, 'arco');
+    const [r] = give(s, 0, 'rotacion');
+    s = play(s, r);
+    expect(s.players.map((p) => p.weapon)).toEqual([null, 'espada', 'arco']);
   });
 
   it('Trueque con alguien sin arma: le das la tuya', () => {
@@ -389,7 +437,7 @@ describe('partidas completas con bots', () => {
         (n, p) => n + p.hand.length + p.curses.length + p.blessings.length + (p.armor ? 1 : 0),
         0,
       );
-      expect(inPlay + s.deck.length + s.discard.length).toBe(68);
+      expect(inPlay + s.deck.length + s.discard.length).toBe(58);
     }
   });
 });
@@ -408,4 +456,3 @@ describe('online', () => {
     expect(() => legalActions(v, v.prompt!.player)).not.toThrow();
   });
 });
-

@@ -6,7 +6,7 @@ export type PlayerId = number; // índice de asiento: 0..n-1, el turno va en ord
 export type WeaponId = 'espada' | 'daga' | 'arco' | 'hacha' | 'mangual' | 'garrote';
 
 export type CardType =
-  | 'ataque'
+  | 'astucia'
   | 'defensa'
   | 'evento'
   | 'armadura'
@@ -18,12 +18,11 @@ export type Proximity = 'cercano' | 'lejano';
 
 /** A quién apunta una carta al jugarla. */
 export type TargetKind =
-  | 'none' // sin objetivo (o los calcula la carta, p. ej. Ataque Cercano)
+  | 'none' // sin objetivo
   | 'self' // a ti mismo
   | 'opponent' // 1 rival vivo
   | 'farOpponent' // 1 rival lejano
-  | 'anyPlayer' // cualquier jugador vivo, incluido tú
-  | 'twoOpponents'; // 2 rivales (Ataque Doble)
+  | 'anyPlayer'; // cualquier jugador vivo, incluido tú
 
 /** Una carta física concreta. `defId` apunta a su definición en cards.ts. */
 export interface CardInstance {
@@ -47,6 +46,8 @@ export interface Player {
   armor: EquippedArmor | null;
   curses: CardInstance[];
   blessings: CardInstance[];
+  bonusDamage: number; // Determinación: daño extra al siguiente ataque
+  sniper: boolean; // Francotirador: ×2 al siguiente ataque lejano
   prostrated: boolean; // Postrado: pierde su próximo turno
   eliminated: boolean;
 }
@@ -74,16 +75,20 @@ export type Task =
 export type Prompt =
   | { kind: 'weapon'; player: PlayerId }
   | { kind: 'play'; player: PlayerId }
+  | { kind: 'chooseWeapon'; player: PlayerId; weapons: WeaponId[] }
+  | { kind: 'attack'; player: PlayerId; remaining: number }
   | { kind: 'defend'; player: PlayerId; attack: Attack }
   | { kind: 'discard'; player: PlayerId; count: number };
 
-export type TurnPhase = 'start' | 'weapon' | 'play' | 'discard';
+export type TurnPhase = 'start' | 'weapon' | 'play' | 'attack' | 'discard';
 
 export interface TurnState {
   player: PlayerId;
   number: number;
   phase: TurnPhase;
-  canPlay: boolean; // false si lanzó el dado estando armado
+  canAttack: boolean; // false si lanzó el dado estando armado
+  attacksLeft: number; // 1 por turno (2 con Brincón)
+  tempWeapon: boolean; // Decidido: el arma vuelve al Cofre al final del turno
 }
 
 export type LogKind = 'turn' | 'attack' | 'damage' | 'heal' | 'weapon' | 'card' | 'elim' | 'info' | 'dev';
@@ -176,7 +181,10 @@ export type Action =
   | { type: 'roll' } // Fase Arma: lanzar el dado
   | { type: 'skipRoll' } // Fase Arma: no lanzar
   | { type: 'play'; cardUid: string; targets: PlayerId[] } // Fase Jugar
-  | { type: 'endTurn' } // Fase Jugar: no jugar carta
+  | { type: 'skipPlay' } // Fase Jugar: no jugar carta
+  | { type: 'chooseWeapon'; weapon: WeaponId } // Decidido: elegir arma del Cofre
+  | { type: 'attack'; target: PlayerId } // Fase Atacar: atacar a un rival
+  | { type: 'endTurn' } // Fase Atacar: no atacar y terminar turno
   | { type: 'defend'; cardUid: string; target?: PlayerId } // responder a un ataque
   | { type: 'noDefense' } // recibir el golpe
   | { type: 'discard'; cardUids: string[] }; // descartar hasta 7
@@ -190,5 +198,6 @@ export interface GameSetup {
   players: SeatSetup[];
   seed?: number;
   firstPlayer?: PlayerId;
+  deckCounts?: Record<string, number>; // baraja personalizada (id -> copias)
   options?: Partial<Omit<GameOptions, 'seed'>>;
 }

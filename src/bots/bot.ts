@@ -11,7 +11,7 @@ import { weaponDef } from '../engine/weapons';
 /** Cuánto vale tener una carta de cada tipo en la mano. */
 const HAND_VALUE: Record<CardType, number> = {
   defensa: 0.9,
-  ataque: 0.6,
+  astucia: 0.65,
   armadura: 0.5,
   bendicion: 0.5,
   misterio: 0.45,
@@ -31,6 +31,7 @@ export function weaponPower(w: WeaponId | null): number {
 function playerValue(p: Player): number {
   let v = p.hp + (p.armor?.pa ?? 0) * 0.8 + weaponPower(p.weapon) * 0.6;
   v += p.blessings.length * 1.5 - p.curses.length * 1.5;
+  v += p.bonusDamage * 0.75 + (p.sniper ? 1.2 : 0);
   if (p.prostrated) v -= 2.5;
   for (const c of p.hand) v += HAND_VALUE[getCardDef(c.defId).type];
   return v;
@@ -42,6 +43,7 @@ export function evaluate(s: GameState, pid: PlayerId): number {
   const me = s.players[pid];
   if (me.eliminated) return -1000;
   let score = playerValue(me);
+  if (s.turn.player === pid && s.turn.canAttack && s.turn.attacksLeft > 1) score += (s.turn.attacksLeft - 1) * 1.6;
   for (const q of s.players) if (q.id !== pid && !q.eliminated) score -= playerValue(q) + 6;
   return score;
 }
@@ -51,8 +53,13 @@ function simulate(s: GameState, pid: PlayerId, action: Action): number {
     // Copia ligera sin registro y con otra semilla: el bot no "ve" el dado de verdad.
     const probe: GameState = { ...s, log: [], fx: [], rng: (s.rng ^ 0x5bd1e995) | 0, options: { ...s.options, logLimit: 0 } };
     let st = applyAction(probe, pid, action);
-    for (let i = 0; i < 60 && !st.result && st.prompt?.kind === 'defend'; i++)
-      st = applyAction(st, st.prompt.player, { type: 'noDefense' });
+    for (let i = 0; i < 60 && !st.result; i++) {
+      if (st.prompt?.kind === 'defend') st = applyAction(st, st.prompt.player, { type: 'noDefense' });
+      else if (st.prompt?.kind === 'chooseWeapon' && st.prompt.player === pid) {
+        const best = [...st.prompt.weapons].sort((a, b) => weaponPower(b) - weaponPower(a))[0];
+        st = applyAction(st, pid, { type: 'chooseWeapon', weapon: best });
+      } else break;
+    }
     return evaluate(st, pid);
   } catch {
     return -Infinity;

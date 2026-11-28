@@ -156,8 +156,16 @@ export function makeAttack(
   const a = s.players[attackerId];
   const w = weaponDef(a.weapon);
   const prox = proximity(s, attackerId, targetId);
-  let damage = prox === 'cercano' ? w.near : w.far;
-  damage *= opts.multiplier ?? 1;
+  let mult = opts.multiplier ?? 1;
+  if (prox === 'lejano' && a.sniper) {
+    mult *= 2;
+    a.sniper = false;
+  }
+  let damage = (prox === 'cercano' ? w.near : w.far) * mult;
+  if (a.bonusDamage > 0) {
+    damage += a.bonusDamage;
+    a.bonusDamage = 0;
+  }
   if (hasStatus(a, 'super_fuerte')) damage += 1;
   return {
     attacker: attackerId,
@@ -273,6 +281,8 @@ export function eliminate(s: GameState, pid: PlayerId): void {
   addFx(s, 'death', pid, { prev: p.weapon });
   p.eliminated = true;
   p.weapon = null;
+  p.bonusDamage = 0;
+  p.sniper = false;
   p.prostrated = false;
   if (p.armor) discardCard(s, p.armor.card);
   p.armor = null;
